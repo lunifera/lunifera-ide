@@ -3,10 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Resources for the IDE
 Bundle-SymbolicName: org.lunifera.ide.core.ui;singleton:=true
 Bundle-Version: 0.7.3.qualifier
-Bundle-Activator: org.lunifera.ide.core.ui.Activator
+Bundle-Activator: org.lunifera.ide.core.ui.CoreUiActivator
 Bundle-Vendor: Lunifera.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: org.osgi.framework;version="1.3.0",
+ org.osgi.service.event;version="1.3.0",
  org.slf4j;version="1.7.2"
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",

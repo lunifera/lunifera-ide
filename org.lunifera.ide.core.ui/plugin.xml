@@ -88,4 +88,16 @@
            id="org.lunifera.ide.core.ui.LuniferaBuilder">
      	</builder>
    </extension>
+   <extension
+         id="I18nRegistryView"
+         point="org.eclipse.ui.views">
+      <view
+            category="org.lunifera.eclipse.ui.views.category.Resources"
+            class="org.lunifera.ide.core.ui.ExecutableExtensionFactory:org.lunifera.ide.core.ui.i18n.I18nRegistryView"
+            icon="icons/lunifera.png"
+            id="org.lunifera.ide.core.ui.i18nview"
+            name="I18nRegistry View"
+            restorable="true">
+      </view>
+   </extension>
 </plugin>

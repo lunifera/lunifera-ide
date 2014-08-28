@@ -1,18 +1,34 @@
+/**
+ * Copyright (c) 2012 Lunifera GmbH (Austria) and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *    Florian Pirchner - initial API and implementation
+ */
 package org.lunifera.ide.core.i18n;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Singleton;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.api.i18n.II18nRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class I18nRegistry implements II18nRegistry {
 
 	private static final ProjectDescription EMPY_PROJECT_DESCRIPTION = new ProjectDescription(
@@ -58,7 +74,7 @@ public class I18nRegistry implements II18nRegistry {
 				.getResourceDescriptions(locale);
 
 		for (ResourceDescription desc : descs) {
-			result = desc.get(key);
+			result = desc.getProperties().getProperty(key);
 			if (isValid(result)) {
 				return result;
 			}
@@ -120,9 +136,32 @@ public class I18nRegistry implements II18nRegistry {
 			ProjectDescription projectDesc = cache
 					.get(description.getProject());
 			if (projectDesc != null) {
-				projectDesc.putResource(description.getLocale(), description);
+				projectDesc.putResource(description);
 			}
+		} else {
+			ProjectDescription projectDesc = new ProjectDescription(
+					description.getProject());
+			projectDesc.putResource(description);
+			cache(projectDesc);
 		}
+	}
+
+	@Override
+	public void removeResource(IProject project, Locale locale, IPath location) {
+		ProjectDescription def = getProjectDescription(project);
+		def.removeResource(locale, location);
+	}
+
+	@Override
+	public Set<ProjectDescription> getProjectDescriptions() {
+		Set<ProjectDescription> result = new HashSet<II18nRegistry.ProjectDescription>(
+				cache.values());
+		return Collections.unmodifiableSet(result);
+	}
+
+	@Override
+	public void removeProject(IProject project) {
+		cache.remove(project);
 	}
 
 }
