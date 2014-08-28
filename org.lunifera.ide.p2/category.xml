@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.lunifera.ide.feature.ui_0.7.3.qualifier.jar" id="org.lunifera.ide.feature.ui" version="0.7.3.qualifier"/>
+</site>

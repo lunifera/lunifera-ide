@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.lunifera.ide.feature.ui"
+      label="%featureName"
+      version="0.7.3.qualifier"
+      provider-name="%providerName">
+
+   <description>
+      %description
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <requires>
+      <import feature="org.eclipse.xtext.sdk" version="2.6.2" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.common" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.common.headless" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.common.headless.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.common.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.dto" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.dto.headless" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.dto.headless.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.dto.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.eclipse.ui" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.eclipse.ui.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.entities" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.entities.headless" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.entities.headless.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dsl.feature.entities.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dependencies.feature.vaadin" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dependencies.feature.atmosphere" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dependencies.feature.jetty.websockets" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.dependencies.feature.vaadin" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.xtext.builder.feature.ui.access" version="0.8.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.xtext.builder.feature.ui.access.source" version="0.8.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.xtext.builder.feature.types" version="0.8.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.xtext.builder.feature.types.source" version="0.8.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.feature.common" version="0.7.1" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.feature.common.source" version="0.7.1" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.ecview.presentation.vaadin" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.ecview.presentation.vaadin.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.vaadin.common" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.vaadin.common.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.vaadin.components" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.vaadin.components.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.vaadin.databinding" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.runtime.web.feature.vaadin.databinding.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.mobile.vaadin.feature.ecview" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.mobile.vaadin.feature.ecview.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.mobile.vaadin.feature.touchkit" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.mobile.vaadin.feature.touchkit.source" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.eclipse.m2e.feature" version="1.5.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.m2e.logback.feature" version="1.5.0" match="greaterOrEqual"/>
+      <import feature="org.lunifera.ecview.feature.ide" version="0.7.3" match="greaterOrEqual"/>
+      <import feature="org.lunifera.ecview.feature.runtime" version="0.7.3" match="greaterOrEqual"/>
+   </requires>
+
+</feature>
