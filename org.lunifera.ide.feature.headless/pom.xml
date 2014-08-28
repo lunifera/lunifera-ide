@@ -69,6 +69,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<name>Lunifera IDE Headless</name>
+	<name>Lunifera IDE headless feature</name>
 	<description>Headless feature for Lunifera IDE</description>
 </project>
