@@ -17,9 +17,18 @@
       %license
    </license>
 
-   <requires>
-      <import plugin="org.lunifera.ide.core.api"/>
-      <import plugin="org.lunifera.ide.core"/>
-   </requires>
+   <plugin
+         id="org.lunifera.ide.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.lunifera.ide.core.api"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>
