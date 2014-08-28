@@ -229,6 +229,6 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-	<name>Widgetset for vaadin mobile</name>
-	<description>Widgetset for vaadin mobile.</description>
+	<name>Lunifera IDE UI</name>
+	<description>UI for Lunifera IDE</description>
 </project>

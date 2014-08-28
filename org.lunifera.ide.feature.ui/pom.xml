@@ -69,6 +69,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<name>Lunifera IDE</name>
-	<description>Installs all features required for Lunifera into the IDE</description>
+	<name>Lunifera IDE UI feature</name>
+	<description>UI feature for Lunifera IDE</description>
 </project>
