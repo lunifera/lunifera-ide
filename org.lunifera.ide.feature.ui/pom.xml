@@ -20,7 +20,7 @@
 		<version>0.7.3-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>org.lunifera.idesdk.feature.ui</artifactId>
+	<artifactId>org.lunifera.ide.feature.ui</artifactId>
 	<packaging>eclipse-feature</packaging>
 
 	<dependencies>
