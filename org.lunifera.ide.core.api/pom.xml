@@ -15,7 +15,6 @@
 		<groupId>org.lunifera.ide</groupId>
 		<artifactId>org.lunifera.ide</artifactId>
 		<version>0.7.3-SNAPSHOT</version>
-		<relativePath/>
 	</parent>
 	<artifactId>org.lunifera.ide.core.api</artifactId>
 	<packaging>eclipse-plugin</packaging>
