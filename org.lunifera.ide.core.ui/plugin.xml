@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+	  <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.lunifera.ide.core.ui.nature.addNature"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.lunifera.ide.core.ui.nature.ToggleLuniferaNatureAction"
+               icon="icons/lunifera.png"
+               id="org.lunifera.ide.core.ui.nature.AddLuniferaNatureAction"
+               label="Convert to Lunifera project"
+               menubarPath="org.eclipse.ui.projectConfigure/additions">
+         </action>
+         <visibility>
+         	<not>
+	            <objectState
+    	              name="nature"
+        	          value="org.lunifera.ide.core.ui.LuniferaNature">
+            	</objectState>
+            </not>
+         </visibility>
+      </objectContribution>
+      <objectContribution
+            adaptable="true"
+            id="org.lunifera.ide.core.ui.nature.removeNature"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.lunifera.ide.core.ui.nature.ToggleLuniferaNatureAction"
+               icon="icons/lunifera.png"
+               id="org.lunifera.ide.core.ui.nature.RemoveXtextNatureAction"
+               label="Remove Lunifera Nature"
+               menubarPath="org.eclipse.ui.projectConfigure/additions">
+         </action>
+         <visibility>
+               <objectState
+    	              name="nature"
+        	          value="org.lunifera.ide.core.ui.LuniferaNature">
+            	</objectState>
+         </visibility>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="true"
+            icon="icons/nature_overlay.png"
+            id="org.lunifera.ide.core.nature.overlay"
+            label="Lunifera Nature"
+            lightweight="true"
+            location="TOP_LEFT"
+            state="true">
+         <enablement>
+         	<and>
+		     	<objectClass
+		              name="org.eclipse.core.resources.IProject"/>
+		        <objectState
+		              name="nature"
+		              value="org.lunifera.ide.core.ui.LuniferaNature">
+		        </objectState>
+            </and>
+         </enablement>
+      </decorator>
+   </extension>
+
+   <extension
+        id="LuniferaBuilder"
+        name="Lunifera Builder"
+        point="org.eclipse.core.resources.builders">
+     	<builder
+           hasNature="true">
+        <run
+              class="org.lunifera.ide.core.ui.ExecutableExtensionFactory">
+        	<parameter name="guicekey" value="org.lunifera.ide.core.ui.builder.LuniferaBuilder"/>
+        </run>
+     </builder>
+  </extension>
+   <extension
+         id="LuniferaNature"
+         point="org.eclipse.core.resources.natures">
+   	 <runtime>
+         <run
+               class="org.lunifera.ide.core.ui.nature.LuniferaNature">
+         </run>
+      </runtime>
+         <builder
+           id="org.lunifera.ide.core.ui.LuniferaBuilder">
+     	</builder>
+   </extension>
+</plugin>
