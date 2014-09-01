@@ -76,10 +76,15 @@ public class I18nRegistryView extends ViewPart {
 					II18nRegistry.ProjectDescription desc = (ProjectDescription) element;
 					return desc.getProject().getName();
 				} else if (element instanceof II18nRegistry.ResourceDescription) {
+
 					II18nRegistry.ResourceDescription desc = (II18nRegistry.ResourceDescription) element;
-					return String.format("%s: %s", desc.getLocale()
-							.toLanguageTag(), desc.getPath().makeRelative()
-							.toString());
+
+					String languageTag = desc.getLocale().toLanguageTag();
+					if (desc.getLocale().toString().equals("")) {
+						languageTag = "empty";
+					}
+					return String.format("%s: %s", languageTag, desc.getPath()
+							.makeRelative().toString());
 				} else if (element instanceof Entry) {
 					@SuppressWarnings("unchecked")
 					Entry<String, String> entry = (Entry<String, String>) element;

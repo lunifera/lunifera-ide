@@ -14,7 +14,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.eclipse.xtext.ui.shared.SharedStateModule;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -22,9 +21,6 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class CoreUiActivator extends AbstractUIPlugin {
 
@@ -37,12 +33,7 @@ public class CoreUiActivator extends AbstractUIPlugin {
 		return plugin;
 	}
 
-	private Injector injector;
 	private EventAdmin eventAdmin;
-
-	public Injector getInjector() {
-		return injector;
-	}
 
 	@Override
 	public void start(BundleContext context) throws Exception {
@@ -54,8 +45,6 @@ public class CoreUiActivator extends AbstractUIPlugin {
 					.getServiceReference(EventAdmin.class);
 			eventAdmin = context.getService(ref);
 
-			injector = Guice.createInjector(new SharedStateModule(),
-					new SharedLuniferaModule());
 		} catch (Exception e) {
 			LOGGER.error(
 					"Error initializing " + PLUGIN_ID + ":" + e.getMessage(), e);
@@ -65,7 +54,6 @@ public class CoreUiActivator extends AbstractUIPlugin {
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
-		injector = null;
 		super.stop(context);
 	}
 

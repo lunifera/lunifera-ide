@@ -23,9 +23,9 @@ public class CoreUtil {
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(CoreUtil.class);
 
-	public static String NATURE_ID = "org.lunifera.ide.core.ui.LuniferaNature";
-	public static final String BUILDER_ID = "org.lunifera.ide.core.ui.LuniferaBuilder";
-	
+	public static String NATURE_ID = "org.lunifera.ide.core.ui.shared.LuniferaNature";
+	public static final String BUILDER_ID = "org.lunifera.ide.core.ui.shared.LuniferaBuilder";
+
 	public static final String EVENT_TOPIC__BUILDER = "org/lunifera/ide/core/ui/builder";
 
 	/**

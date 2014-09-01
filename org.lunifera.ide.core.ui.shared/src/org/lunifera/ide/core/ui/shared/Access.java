@@ -8,18 +8,15 @@
  * Contributors:
  *    Florian Pirchner - initial API and implementation
  */
-package org.lunifera.ide.core.ui;
+package org.lunifera.ide.core.ui.shared;
 
 import org.lunifera.ide.core.api.i18n.II18nRegistry;
-import org.lunifera.ide.core.i18n.I18nRegistry;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 
-public class SharedLuniferaModule extends AbstractModule {
+public class Access extends org.eclipse.xtext.ui.shared.Access {
 
-	@Override
-	protected void configure() {
-		bind(II18nRegistry.class).to(I18nRegistry.class);
+	public static Provider<II18nRegistry> getII18nRegistry() {
+		return Access.<II18nRegistry> contributedProvider(II18nRegistry.class);
 	}
-
 }

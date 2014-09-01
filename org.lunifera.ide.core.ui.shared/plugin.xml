@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+   <extension
+         id="LuniferaNature"
+         point="org.eclipse.core.resources.natures">
+   	 <runtime>
+         <run
+               class="org.lunifera.ide.core.ui.nature.LuniferaNature">
+         </run>
+      </runtime>
+         <builder
+           id="org.lunifera.ide.core.ui.shared.LuniferaBuilder">
+     	</builder>
+   </extension>
+   <extension
+        id="LuniferaBuilder"
+        name="Lunifera Builder"
+        point="org.eclipse.core.resources.builders">
+     	<builder
+           hasNature="true">
+        <run
+              class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory">
+        	<parameter name="guicekey" value="org.lunifera.ide.core.ui.builder.LuniferaBuilder"/>
+        </run>
+     </builder>
+  </extension>
+   <extension
+         id="I18nRegistryView"
+         point="org.eclipse.ui.views">
+      <view
+            category="org.lunifera.eclipse.ui.views.category.Resources"
+            class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory:org.lunifera.ide.core.ui.i18n.I18nRegistryView"
+            icon="icons/lunifera.png"
+            id="org.lunifera.ide.core.ui.i18nview"
+            name="I18nRegistry View"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.xtext.ui.shared.sharedStateContributingModule">
+      <module
+            class="org.lunifera.ide.core.ui.shared.internal.SharedStateContribution">
+      </module>
+   </extension>
+</plugin>

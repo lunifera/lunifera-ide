@@ -57,7 +57,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	@Override
 	protected IProject[] build(int kind, Map<String, String> args,
 			IProgressMonitor monitor) throws CoreException {
-		
+
 		long startTime = System.currentTimeMillis();
 		try {
 			if (monitor != null) {
@@ -98,7 +98,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			LOGGER.info("Build " + getProject().getName() + " in "
 					+ (System.currentTimeMillis() - startTime) + " ms");
 		}
-		
+
 		sendBuildEvent();
 
 		return getProject().getReferencedProjects();
@@ -145,7 +145,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				} else if (delta.getResource() instanceof IFile) {
 					IFile file = (IFile) delta.getResource();
 					if (file.getFileExtension().equals("properties")) {
-
+						String parentFolder = file.getParent().getName();
+						if (!parentFolder.equals("l10n")
+								&& !parentFolder.equals("i18n")) {
+							return false;
+						}
 						String[] tokens = file.getName()
 								.replace(".properties", "").split("_");
 						StringBuilder builder = new StringBuilder();
@@ -231,6 +235,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				} else if (resource instanceof IFile) {
 					IFile file = (IFile) resource;
 					if (file.getFileExtension().equals("properties")) {
+						String parentFolder = file.getParent().getName();
+						if (!parentFolder.equals("l10n")
+								&& !parentFolder.equals("i18n")) {
+							return false;
+						}
 						String[] tokens = file.getName()
 								.replace(".properties", "").split("_");
 						StringBuilder builder = new StringBuilder();

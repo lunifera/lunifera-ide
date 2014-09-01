@@ -8,7 +8,7 @@
  * Contributors:
  *    Florian Pirchner - initial API and implementation
  */
-package org.lunifera.ide.core.ui;
+package org.lunifera.ide.core.ui.shared.internal;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.xtext.ui.guice.AbstractGuiceAwareExecutableExtensionFactory;
@@ -21,12 +21,12 @@ public class ExecutableExtensionFactory extends
 
 	@Override
 	protected Bundle getBundle() {
-		return CoreUiActivator.getDefault().getBundle();
+		return Activator.getDefault().getBundle();
 	}
 
 	@Override
 	protected Injector getInjector() {
-		return CoreUiActivator.getDefault().getInjector();
+		return Activator.getDefault().getInjector();
 	}
 	
 	public Object create() throws CoreException {

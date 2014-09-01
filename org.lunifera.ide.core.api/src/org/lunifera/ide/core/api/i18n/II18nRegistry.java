@@ -41,6 +41,72 @@ public interface II18nRegistry {
 	String getText(IProject project, Locale locale, String key);
 
 	/**
+	 * Returns a list of matching elements.
+	 * 
+	 * @param project
+	 *            - The project which should be searched for matching I18n
+	 *            values.
+	 * @param locale
+	 *            - The locale which should be used to search for matching I18n
+	 *            values.
+	 * @param packageName
+	 *            - The package name. It can be used to search for I18n values,
+	 *            if the searchValue starts with ".". For instance
+	 *            ".SalesOrder". Then the matcher only looks for I18n Values
+	 *            with a key starting with the given package name.<br>
+	 *            Wildcards are allowed. For instance ".*Order". The matcher
+	 *            tries to find any possible combination. A "*" wildcard at the
+	 *            end of the searchValue will be added automatically by the
+	 *            matcher.
+	 * @param filterValue
+	 *            - The filterValue.
+	 *            <ul>
+	 *            <li>"*Order" - Find all entries in all packages where "Order"
+	 *            is contained</li>
+	 *            <li>".*Order" - Find all entries starting with the given
+	 *            package name where "Order" is contained. If package is
+	 *            "org.my.example", then "org.my.example.SalesOrder" will be
+	 *            matched.</li>
+	 *            </ul>
+	 * @return proposal - a List never <code>null</code>
+	 */
+	List<Proposal> findProposals(IProject project, Locale locale,
+			String packageName, String searchValue);
+
+	/**
+	 * Returns the best matching proposal.
+	 * 
+	 * @param project
+	 *            - The project which should be searched for matching I18n
+	 *            values.
+	 * @param locale
+	 *            - The locale which should be used to search for matching I18n
+	 *            values.
+	 * @param packageName
+	 *            - The package name. It can be used to search for I18n values,
+	 *            if the searchValue starts with ".". For instance
+	 *            ".SalesOrder". Then the matcher only looks for I18n Values
+	 *            with a key starting with the given package name.<br>
+	 *            Wildcards are allowed. For instance ".*Order". The matcher
+	 *            tries to find any possible combination. A "*" wildcard at the
+	 *            end of the searchValue will be added automatically by the
+	 *            matcher.
+	 * @param filterValue
+	 *            - The filterValue.
+	 *            <ul>
+	 *            <li>"*Order" - Find all entries in all packages where "Order"
+	 *            is contained</li>
+	 *            <li>".*Order" - Find all entries starting with the given
+	 *            package name where "Order" is contained. If package is
+	 *            "org.my.example", then "org.my.example.SalesOrder" will be
+	 *            matched.</li>
+	 *            </ul>
+	 * @return proposal - a List never <code>null</code>
+	 */
+	Proposal findBestMatch(IProject project, Locale locale, String packageName,
+			String searchValue);
+
+	/**
 	 * Caches the ProjectDescription.
 	 * 
 	 * @param project
@@ -64,8 +130,7 @@ public interface II18nRegistry {
 	 * @param location
 	 */
 	void removeResource(IProject project, Locale locale, IPath location);
-	
-	
+
 	/**
 	 * Removes the project from the cache.
 	 * 
@@ -140,7 +205,8 @@ public interface II18nRegistry {
 		 */
 		public void putResource(ResourceDescription value) {
 
-			Set<ResourceDescription> descriptions = resources.get(value.getLocale());
+			Set<ResourceDescription> descriptions = resources.get(value
+					.getLocale());
 			if (descriptions == null) {
 				descriptions = new HashSet<II18nRegistry.ResourceDescription>();
 				descriptions.add(value);
@@ -260,6 +326,59 @@ public interface II18nRegistry {
 			} else if (!path.equals(other.path))
 				return false;
 			return true;
+		}
+	}
+
+	public static class Proposal {
+
+		private final String i18nKey;
+		private final String i18nValue;
+		private final ResourceDescription resourceDescription;
+		private final int priority;
+
+		public Proposal(String i18nKey, String i18nValue,
+				ResourceDescription resourceDescription, int priority) {
+			super();
+			this.i18nKey = i18nKey;
+			this.i18nValue = i18nValue;
+			this.resourceDescription = resourceDescription;
+			this.priority = priority;
+		}
+
+		/**
+		 * Returns the i18nKey.
+		 * 
+		 * @return
+		 */
+		public String getI18nKey() {
+			return i18nKey;
+		}
+
+		/**
+		 * Returns the i18nValue.
+		 * 
+		 * @return
+		 */
+		public String getI18nValue() {
+			return i18nValue;
+		}
+
+		/**
+		 * Returns the locale where key and value had been found.
+		 * 
+		 * @return
+		 */
+		public Locale getLocale() {
+			return resourceDescription.getLocale();
+		}
+
+		/**
+		 * Returns the resource description, where the i18n entry was contained.
+		 * 
+		 * @return
+		 */
+		public ResourceDescription getResourceDescription() {
+			return resourceDescription;
 		}
 
 	}
