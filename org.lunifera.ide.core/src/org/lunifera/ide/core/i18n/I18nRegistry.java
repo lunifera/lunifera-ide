@@ -21,16 +21,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Singleton;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.api.i18n.II18nRegistry;
-import org.lunifera.ide.core.api.i18n.II18nRegistry.Proposal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class I18nRegistry implements II18nRegistry {
@@ -61,12 +60,12 @@ public class I18nRegistry implements II18nRegistry {
 				searchValue);
 		return accessPath.getProposals();
 	}
-	
+
 	@Override
 	public Proposal findBestMatch(IProject project, Locale locale,
 			String packageName, String searchValue) {
-		AccessPath accessPath = computeBestMatchAccessPath(project, locale, packageName,
-				searchValue);
+		AccessPath accessPath = computeBestMatchAccessPath(project, locale,
+				packageName, searchValue);
 		return accessPath.getBestMatch();
 	}
 
@@ -207,7 +206,7 @@ public class I18nRegistry implements II18nRegistry {
 				break;
 			}
 		}
-		
+
 		locales.add(new Locale(""));
 
 		return locales;
