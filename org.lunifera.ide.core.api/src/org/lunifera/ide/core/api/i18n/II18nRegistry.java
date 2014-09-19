@@ -41,7 +41,9 @@ public interface II18nRegistry {
 	String getText(IProject project, Locale locale, String key);
 
 	/**
-	 * Returns a list of matching elements.
+	 * Returns a list of proposals. If the searchValue matches parts of the
+	 * value or the key for an i18n record, it is added to the list of
+	 * proposals. Must never return <code>null</code>.
 	 * 
 	 * @param project
 	 *            - The project which should be searched for matching I18n
@@ -70,8 +72,34 @@ public interface II18nRegistry {
 	 *            </ul>
 	 * @return proposal - a List never <code>null</code>
 	 */
-	List<Proposal> findProposals(IProject project, Locale locale,
+	List<Proposal> findContentProposals(IProject project, Locale locale,
 			String packageName, String searchValue);
+
+	/**
+	 * Returns a list of proposals. The searchValue must match the entire key
+	 * for an i18n record.
+	 * 
+	 * @param project
+	 *            - The project which should be searched for matching I18n
+	 *            values.
+	 * @param locale
+	 *            - The locale which should be used to search for matching I18n
+	 *            values.
+	 * @param packageName
+	 *            - The package name. It can be used to search for I18n values,
+	 *            if the searchValue starts with ".". For instance
+	 *            ".SalesOrder". Then the matcher only looks for I18n Values
+	 *            with a key starting with the given package name.<br>
+	 *            Wildcards are allowed. For instance ".*Order". The matcher
+	 *            tries to find any possible combination. A "*" wildcard at the
+	 *            end of the searchValue will be added automatically by the
+	 *            matcher.
+	 * @param key
+	 *            - The key to look for.
+	 * @return proposal - a List never <code>null</code>
+	 */
+	List<Proposal> findStrictKeyMatchingProposals(IProject project,
+			Locale locale, String packageName, String key);
 
 	/**
 	 * Returns the best matching proposal.
@@ -91,20 +119,12 @@ public interface II18nRegistry {
 	 *            tries to find any possible combination. A "*" wildcard at the
 	 *            end of the searchValue will be added automatically by the
 	 *            matcher.
-	 * @param filterValue
-	 *            - The filterValue.
-	 *            <ul>
-	 *            <li>"*Order" - Find all entries in all packages where "Order"
-	 *            is contained</li>
-	 *            <li>".*Order" - Find all entries starting with the given
-	 *            package name where "Order" is contained. If package is
-	 *            "org.my.example", then "org.my.example.SalesOrder" will be
-	 *            matched.</li>
-	 *            </ul>
+	 * @param key
+	 *            - The key to look for.
 	 * @return proposal - a List never <code>null</code>
 	 */
 	Proposal findBestMatch(IProject project, Locale locale, String packageName,
-			String searchValue);
+			String key);
 
 	/**
 	 * Caches the ProjectDescription.

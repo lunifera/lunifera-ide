@@ -54,18 +54,26 @@ public class I18nRegistry implements II18nRegistry {
 	}
 
 	@Override
-	public List<Proposal> findProposals(IProject project, Locale locale,
+	public List<Proposal> findContentProposals(IProject project, Locale locale,
 			String packageName, String searchValue) {
 		AccessPath accessPath = computeAccessPath(project, locale, packageName,
 				searchValue);
-		return accessPath.getProposals();
+		return accessPath.getContentProposals();
+	}
+
+	@Override
+	public List<Proposal> findStrictKeyMatchingProposals(IProject project,
+			Locale locale, String packageName, String key) {
+		AccessPath accessPath = computeBestMatchAccessPath(project, locale,
+				packageName, key);
+		return accessPath.getStrictKeyMatchingProposals();
 	}
 
 	@Override
 	public Proposal findBestMatch(IProject project, Locale locale,
-			String packageName, String searchValue) {
+			String packageName, String key) {
 		AccessPath accessPath = computeBestMatchAccessPath(project, locale,
-				packageName, searchValue);
+				packageName, key);
 		return accessPath.getBestMatch();
 	}
 
@@ -106,11 +114,7 @@ public class I18nRegistry implements II18nRegistry {
 
 		Matcher valueMatcher = null;
 		if (valuePatternString != null && !valuePatternString.equals("")) {
-			valuePatternString = Pattern
-					.quote(valuePatternString.toLowerCase());
-			// if (!valuePatternString.endsWith("*")) {
-			// valuePatternString = valuePatternString.concat("*");
-			// }
+			valuePatternString = Pattern.quote(valuePatternString);
 			Pattern valuePattern = Pattern.compile(valuePatternString
 					.toString());
 			valueMatcher = valuePattern.matcher("");
@@ -345,10 +349,32 @@ public class I18nRegistry implements II18nRegistry {
 			accessors.add(accessor);
 		}
 
-		public List<Proposal> getProposals() {
+		/**
+		 * Returns a list of proposals. If the searchValue matches parts of the
+		 * value or the key for an i18n record, it is added to the list of
+		 * proposals.
+		 * 
+		 * @return
+		 */
+		public List<Proposal> getContentProposals() {
 			List<Proposal> proposals = new LinkedList<II18nRegistry.Proposal>();
 			for (Accessor accessor : accessors) {
 				proposals.addAll(accessor.getProposals());
+			}
+
+			return proposals;
+		}
+
+		/**
+		 * Returns a list of proposals. The searchValue matches the entire key
+		 * for an i18n record.
+		 * 
+		 * @return
+		 */
+		public List<Proposal> getStrictKeyMatchingProposals() {
+			List<Proposal> proposals = new LinkedList<II18nRegistry.Proposal>();
+			for (Accessor accessor : accessors) {
+				proposals.addAll(accessor.getStrictKeyProposals());
 			}
 
 			return proposals;
@@ -362,9 +388,8 @@ public class I18nRegistry implements II18nRegistry {
 		 * @return
 		 */
 		public Proposal getBestMatch() {
-			List<Proposal> proposals = new LinkedList<II18nRegistry.Proposal>();
 			for (Accessor accessor : accessors) {
-				List<Proposal> result = accessor.getProposals();
+				List<Proposal> result = accessor.getStrictKeyProposals();
 				if (!result.isEmpty()) {
 					return result.get(0);
 				}
@@ -382,6 +407,7 @@ public class I18nRegistry implements II18nRegistry {
 		private final IProject project;
 		private final Locale locale;
 		private final Matcher matcher;
+		@SuppressWarnings("unused")
 		private final String searchValue;
 		private final String keyPackage;
 		private final int prio;
@@ -398,8 +424,9 @@ public class I18nRegistry implements II18nRegistry {
 		}
 
 		/**
-		 * Returns all proposals for the defined values. Must never return
-		 * <code>null</code>.
+		 * Returns all proposals for the defined values. A result is added to
+		 * the list of proposals, if parts of the key match the pattern. Must
+		 * never return <code>null</code>.
 		 * 
 		 * @return
 		 */
@@ -422,12 +449,44 @@ public class I18nRegistry implements II18nRegistry {
 					}
 
 					if (matcher == null
-							|| matcher.reset(
-									((String) entry.getValue()).toLowerCase())
+							|| matcher.reset(((String) entry.getValue()))
 									.find()
-							|| matcher.reset(
-									((String) entry.getKey()).toLowerCase())
-									.find()) {
+							|| matcher.reset(((String) entry.getKey())).find()) {
+						proposals.add(new Proposal((String) entry.getKey(),
+								(String) entry.getValue(), desc, prio));
+					}
+				}
+			}
+			return proposals;
+		}
+
+		/**
+		 * Returns all proposals for the defined values. The matcher must match
+		 * the given key. Must never return <code>null</code>.
+		 * 
+		 * @return
+		 */
+		public List<Proposal> getStrictKeyProposals() {
+			ProjectDescription projectDesc = getProjectDescription(project);
+			if (projectDesc == I18nRegistry.EMPY_PROJECT_DESCRIPTION) {
+				return Collections.emptyList();
+			}
+
+			List<Proposal> proposals = new LinkedList<II18nRegistry.Proposal>();
+			List<ResourceDescription> descs = projectDesc
+					.getResourceDescriptions(locale);
+			for (ResourceDescription desc : descs) {
+				for (Map.Entry<Object, Object> entry : desc.getProperties()
+						.entrySet()) {
+					if (keyPackage != null
+							&& !((String) entry.getKey())
+									.startsWith(keyPackage)) {
+						continue;
+					}
+
+					if (matcher == null
+							|| matcher.reset(((String) entry.getKey()))
+									.matches()) {
 						proposals.add(new Proposal((String) entry.getKey(),
 								(String) entry.getValue(), desc, prio));
 					}
