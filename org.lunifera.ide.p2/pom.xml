@@ -19,6 +19,7 @@
 
 	<artifactId>org.lunifera.ide.p2</artifactId>
 	<packaging>eclipse-repository</packaging>
+	<name>P2 for Lunifera IDE</name>
 
 	<properties>
 		<lunifera.deployment.p2.label>dependencies</lunifera.deployment.p2.label>
@@ -89,7 +90,4 @@
 			</build>
 		</profile>
 	</profiles>
-
-
-	<name>P2 for Lunifera IDE</name>
 </project>
