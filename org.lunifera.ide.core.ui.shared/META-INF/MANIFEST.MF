@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Resources for the IDE
 Bundle-SymbolicName: org.lunifera.ide.core.ui.shared;singleton:=true
-Bundle-Version: 0.7.4
+Bundle-Version: 0.7.5.qualifier
 Bundle-Activator: org.lunifera.ide.core.ui.shared.internal.Activator
 Bundle-Vendor: Lunifera.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
