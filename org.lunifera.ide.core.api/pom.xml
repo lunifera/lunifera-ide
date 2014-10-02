@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.lunifera.ide</groupId>
 		<artifactId>org.lunifera.ide</artifactId>
-		<version>0.7.3-SNAPSHOT</version>
+		<version>0.7.4</version>
 	</parent>
 	<artifactId>org.lunifera.ide.core.api</artifactId>
 	<packaging>eclipse-plugin</packaging>
