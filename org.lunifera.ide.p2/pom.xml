@@ -91,4 +91,5 @@
 		</profile>
 	</profiles>
 	<groupId>org.lunifera.ide</groupId>
+	<version>0.7.5-SNAPSHOT</version>
 </project>
