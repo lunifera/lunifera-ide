@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Resources for the IDE
 Bundle-SymbolicName: org.lunifera.ide.core;singleton:=true
-Bundle-Version: 0.7.3.qualifier
+Bundle-Version: 0.7.5.qualifier
 Bundle-Activator: org.lunifera.ide.core.Activator
 Bundle-Vendor: Lunifera.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7

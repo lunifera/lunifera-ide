@@ -17,7 +17,7 @@
 	<parent>
 		<groupId>org.lunifera.ide</groupId>
 		<artifactId>org.lunifera.ide</artifactId>
-		<version>0.7.3-SNAPSHOT</version>
+		<version>0.7.5-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>org.lunifera.ide.feature.ui</artifactId>
