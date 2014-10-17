@@ -12,9 +12,13 @@ package org.lunifera.ide.core.ui.builder;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -29,9 +33,38 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.ProgressMonitorWrapper;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.xtext.naming.QualifiedName;
+import org.eclipse.xtext.resource.IEObjectDescription;
+import org.eclipse.xtext.resource.IResourceDescriptions;
+import org.eclipse.xtext.resource.SaveOptions;
+import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.ui.resource.XtextResourceSetProvider;
+import org.lunifera.dsl.semantic.common.types.LAttribute;
+import org.lunifera.dsl.semantic.common.types.LPackage;
+import org.lunifera.dsl.semantic.common.types.LReference;
+import org.lunifera.dsl.semantic.common.types.LType;
+import org.lunifera.dsl.semantic.common.types.LTypedPackage;
+import org.lunifera.dsl.semantic.dto.LAutoInheritDto;
+import org.lunifera.dsl.semantic.dto.LDto;
+import org.lunifera.dsl.semantic.dto.LDtoFeature;
+import org.lunifera.dsl.semantic.dto.LDtoInheritedAttribute;
+import org.lunifera.dsl.semantic.dto.LDtoInheritedReference;
+import org.lunifera.dsl.semantic.dto.LDtoModel;
+import org.lunifera.dsl.semantic.dto.LunDtoFactory;
+import org.lunifera.dsl.semantic.dto.LunDtoPackage;
+import org.lunifera.dsl.semantic.entity.LEntity;
+import org.lunifera.dsl.semantic.entity.LEntityAttribute;
+import org.lunifera.dsl.semantic.entity.LEntityFeature;
+import org.lunifera.dsl.semantic.entity.LEntityModel;
+import org.lunifera.dsl.semantic.entity.LEntityReference;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.api.i18n.II18nRegistry;
 import org.lunifera.ide.core.ui.CoreUiActivator;
+import org.lunifera.xtext.builder.ui.access.IXtextUtilService;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +80,10 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 
 	@Inject
 	private II18nRegistry i18nRegistry;
+	@Inject
+	private XtextResourceSetProvider rsProvider;
+	@Inject
+	private IResourceDescriptions resourceDescriptions;
 
 	private boolean firstBuild = true;
 
@@ -134,6 +171,24 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			return;
 		}
 
+		incrementalBuildI18n(delta, progress);
+		incrementalBuildDtos(delta, progress);
+
+		if (progress.isCanceled())
+			throw new OperationCanceledException();
+		progress.worked(4);
+
+	}
+
+	/**
+	 * Builds I18n.
+	 * 
+	 * @param delta
+	 * @param progress
+	 * @throws CoreException
+	 */
+	protected void incrementalBuildI18n(IResourceDelta delta,
+			final SubMonitor progress) throws CoreException {
 		delta.accept(new IResourceDeltaVisitor() {
 			@Override
 			public boolean visit(IResourceDelta delta) throws CoreException {
@@ -201,11 +256,41 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				return false;
 			}
 		});
+	}
 
-		if (progress.isCanceled())
-			throw new OperationCanceledException();
-		progress.worked(4);
-
+	/**
+	 * Builds I18n.
+	 * 
+	 * @param delta
+	 * @param progress
+	 * @throws CoreException
+	 */
+	protected void incrementalBuildDtos(IResourceDelta delta,
+			final SubMonitor progress) throws CoreException {
+		delta.accept(new IResourceDeltaVisitor() {
+			@Override
+			public boolean visit(IResourceDelta delta) throws CoreException {
+				if (progress.isCanceled()) {
+					throw new OperationCanceledException();
+				}
+				if (delta.getResource() instanceof IProject) {
+					return delta.getResource() == getProject();
+				} else if (delta.getResource() instanceof IFile) {
+					IFile file = (IFile) delta.getResource();
+					if (file.getFileExtension().equals("entitymodel")) {
+						LEntityModel lEntityModel = loadSemanticModel(file);
+						if (lEntityModel != null) {
+							buildDtos(lEntityModel);
+						}
+					}
+				} else if (delta.getResource() instanceof IFolder) {
+					String name = delta.getResource().getName();
+					return name.equals("target") || name.equals("bin")
+							|| name.equals("classes") ? false : true;
+				}
+				return false;
+			}
+		});
 	}
 
 	/**
@@ -225,6 +310,19 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 
 		// getProject().getWorkspace().checkpoint(false);
 		monitor.worked(2);
+		fullBuildI18n(project);
+		fullBuildDtos(project);
+		monitor.worked(6);
+	}
+
+	/**
+	 * Builds I18n stuff.
+	 * 
+	 * @param project
+	 * @return
+	 * @throws CoreException
+	 */
+	protected void fullBuildI18n(IProject project) throws CoreException {
 		final II18nRegistry.ProjectDescription projectDescription = new II18nRegistry.ProjectDescription(
 				getProject());
 		project.accept(new IResourceVisitor() {
@@ -284,9 +382,199 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				return false;
 			}
 		});
-		monitor.worked(6);
-		i18nRegistry.cache(projectDescription);
 
+		i18nRegistry.cache(projectDescription);
+	}
+
+	/**
+	 * Builds I18n stuff.
+	 * 
+	 * @param project
+	 * @return
+	 * @throws CoreException
+	 */
+	protected II18nRegistry.ProjectDescription fullBuildDtos(
+			final IProject project) throws CoreException {
+		final II18nRegistry.ProjectDescription projectDescription = new II18nRegistry.ProjectDescription(
+				getProject());
+		project.accept(new IResourceVisitor() {
+			@Override
+			public boolean visit(IResource resource) throws CoreException {
+				if (resource == getProject()) {
+					return true;
+				} else if (resource instanceof IFile) {
+					IFile file = (IFile) resource;
+					if (file.getFileExtension().equals("entitymodel")) {
+						LEntityModel lEntityModel = loadSemanticModel(file);
+						if (lEntityModel != null) {
+							buildDtos(lEntityModel);
+						}
+					}
+				} else if (resource instanceof IFolder) {
+					String name = resource.getName();
+					return name.equals("target") || name.equals("bin")
+							|| name.equals("classes") ? false : true;
+				}
+				return false;
+			}
+		});
+		return projectDescription;
+	}
+
+	private void buildDtos(LEntityModel lEntityModel) {
+		IXtextUtilService service = CoreUiActivator.getDefault()
+				.getUtilService();
+		if (service == null) {
+			LOGGER.error("Skipping dto build since IXtextUtilService is not available!");
+			return;
+		}
+
+		Set<URI> entities = new HashSet<URI>();
+		for (LTypedPackage lPkg : lEntityModel.getPackages()) {
+			for (LType lType : lPkg.getTypes()) {
+				if (lType instanceof LEntity) {
+					entities.add(EcoreUtil.getURI(lType));
+				}
+			}
+		}
+
+		Set<URI> processedResources = new HashSet<URI>();
+		for (IEObjectDescription desc : resourceDescriptions
+				.getExportedObjectsByType(LunDtoPackage.Literals.LAUTO_INHERIT_DTO)) {
+
+			// load the resource by the resource set
+			XtextResourceSet resourceSet = (XtextResourceSet) rsProvider
+					.get(getProject());
+			Resource dtoModelResource = resourceSet.getResource(
+					URI.createURI(desc.getEObjectURI().trimFragment()
+							.toString()), true);
+			processedResources.add(dtoModelResource.getURI());
+
+			// now process all matching dtos
+			LDtoModel dtoModel = (LDtoModel) dtoModelResource.getContents()
+					.get(0);
+			for (LTypedPackage lPkg : dtoModel.getPackages()) {
+				for (LType lType : lPkg.getTypes()) {
+					if (lType instanceof LDto) {
+						LDto lDto = (LDto) lType;
+
+						if (!(lDto instanceof LAutoInheritDto)) {
+							continue;
+						}
+
+						if (!entities.contains(EcoreUtil.getURI(lDto
+								.getWrappedType()))) {
+							// dto does not wrap any of the changed entity
+							continue;
+						}
+
+						// now remove all inherited features. Will be added
+						// again
+						for (Iterator<LDtoFeature> iterator = lDto
+								.getFeatures().iterator(); iterator.hasNext();) {
+							LDtoFeature lFeature = iterator.next();
+							if ((lFeature instanceof LDtoInheritedAttribute)
+									|| (lFeature instanceof LDtoInheritedReference)) {
+								iterator.remove();
+							}
+						}
+
+						LEntity currentEntity = (LEntity) lDto.getWrappedType();
+						// now add all features from the entity as inherited
+						// feature
+
+						// also add features from supertype, if dto does not
+						// extend any dto.
+						List<LEntityFeature> features = lDto.getSuperType() == null ? currentEntity
+								.getAllFeatures() : currentEntity.getFeatures();
+						for (LEntityFeature lEntityFeature : features) {
+							if (lEntityFeature instanceof LEntityAttribute) {
+								LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
+										.createLDtoInheritedAttribute();
+								lNewAtt.setInheritedFeature((LAttribute) lEntityFeature);
+								LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+										.createLDtoFeature();
+								lNewAtt.setAnnotationInfo(lAnnTarget);
+								lDto.getFeatures().add(lNewAtt);
+							} else if (lEntityFeature instanceof LEntityReference) {
+								// Mapped dto
+								LDto mapToDto = getMapToDto((LEntityReference) lEntityFeature);
+								if (mapToDto == null) {
+									LOGGER.error("No Mapping-DTO could be found for "
+											+ lEntityFeature.getEntity());
+									continue;
+								}
+
+								LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+										.createLDtoInheritedReference();
+								lNewRef.setInheritedFeature((LReference) lEntityFeature);
+								LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+										.createLDtoFeature();
+								lNewRef.setAnnotationInfo(lAnnTarget);
+								lDto.getFeatures().add(lNewRef);
+								lNewRef.setType(mapToDto);
+							}
+						}
+					}
+				}
+			}
+
+			try {
+				dtoModelResource.save(SaveOptions.newBuilder().format()
+						.getOptions().toOptionsMap());
+			} catch (IOException e) {
+				LOGGER.error("{}", e);
+			}
+
+		}
+	}
+
+	/**
+	 * Returns the mapped DTO or <code>null</code>.
+	 * 
+	 * @param lEntityFeature
+	 * @return
+	 */
+	private LDto getMapToDto(LEntityReference lEntityFeature) {
+		LEntity entity = lEntityFeature.getType();
+		LPackage lPkg = (LPackage) entity.eContainer();
+
+		String pkgName = lPkg.getName();
+		String dtoFQN = String.format("%s.dtos.%sDto", pkgName,
+				entity.getName());
+
+		QualifiedName name = QualifiedName.create(dtoFQN.split("\\."));
+
+		for (IEObjectDescription result : resourceDescriptions
+				.getExportedObjects(LunDtoPackage.Literals.LDTO, name, false)) {
+			return (LDto) result.getEObjectOrProxy();
+		}
+
+		for (IEObjectDescription result : resourceDescriptions
+				.getExportedObjects(LunDtoPackage.Literals.LAUTO_INHERIT_DTO,
+						name, false)) {
+			return (LDto) result.getEObjectOrProxy();
+		}
+
+		return null;
+	}
+
+	private <A extends EObject> A loadSemanticModel(IFile file) {
+		LOGGER.info("loading:" + file.getName());
+		org.eclipse.emf.common.util.URI entityDSLURI = org.eclipse.emf.common.util.URI
+				.createPlatformResourceURI(file.getFullPath().toString(), false);
+		XtextResourceSet rs = (XtextResourceSet) rsProvider.get(getProject());
+		Resource entityResource = rs.getResource(entityDSLURI, true);
+		try {
+			entityResource.load(null);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		@SuppressWarnings("unchecked")
+		A entityModel = (A) entityResource.getContents().get(0);
+		LOGGER.info("finished loading:" + file.getName());
+		return entityModel;
 	}
 
 	protected boolean isOpened(IResourceDelta delta) {
