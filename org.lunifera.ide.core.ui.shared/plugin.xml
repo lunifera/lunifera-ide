@@ -42,4 +42,29 @@
             class="org.lunifera.ide.core.ui.shared.internal.SharedStateContribution">
       </module>
    </extension>
+   
+   	<!-- Wizards -->
+	<extension
+		point="org.eclipse.ui.newWizards">
+		<category
+			name="Lunifera Tools"
+			id="org.lunifera.projectwiz">
+		</category>
+		<wizard
+			category="org.lunifera.projectwiz"
+			class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory:org.lunifera.ide.core.ui.project.NewLuniferaProjectWizard"
+			icon="icons/newLuniferaProject.png"
+			id="org.eclipse.xtext.xtext.ui.wizard.project.NewXtextProjectWizard"
+			name="Lunifera Project"
+			project="true">
+			<description>
+            	Creates a new Lunifera Project
+         	</description>
+		</wizard>
+  <category
+        id="org.eclipse.xtext.projectwiz.releng"
+        name="Lunifera Tools"
+        parentCategory="org.eclipse.xtext.projectwiz">
+  </category>
+	</extension>
 </plugin>

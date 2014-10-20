@@ -56,6 +56,10 @@ import org.lunifera.dsl.semantic.dto.LDtoInheritedReference;
 import org.lunifera.dsl.semantic.dto.LDtoModel;
 import org.lunifera.dsl.semantic.dto.LunDtoFactory;
 import org.lunifera.dsl.semantic.dto.LunDtoPackage;
+import org.lunifera.dsl.semantic.entity.LBean;
+import org.lunifera.dsl.semantic.entity.LBeanAttribute;
+import org.lunifera.dsl.semantic.entity.LBeanFeature;
+import org.lunifera.dsl.semantic.entity.LBeanReference;
 import org.lunifera.dsl.semantic.entity.LEntity;
 import org.lunifera.dsl.semantic.entity.LEntityAttribute;
 import org.lunifera.dsl.semantic.entity.LEntityFeature;
@@ -432,7 +436,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		Set<URI> entities = new HashSet<URI>();
 		for (LTypedPackage lPkg : lEntityModel.getPackages()) {
 			for (LType lType : lPkg.getTypes()) {
-				if (lType instanceof LEntity) {
+				if (lType instanceof LEntity || lType instanceof LBean) {
 					entities.add(EcoreUtil.getURI(lType));
 				}
 			}
@@ -479,40 +483,82 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 							}
 						}
 
-						LEntity currentEntity = (LEntity) lDto.getWrappedType();
-						// now add all features from the entity as inherited
-						// feature
+						if (lDto.getWrappedType() instanceof LEntity) {
+							LEntity currentEntity = (LEntity) lDto
+									.getWrappedType();
+							// now add all features from the entity as inherited
+							// feature
 
-						// also add features from supertype, if dto does not
-						// extend any dto.
-						List<LEntityFeature> features = lDto.getSuperType() == null ? currentEntity
-								.getAllFeatures() : currentEntity.getFeatures();
-						for (LEntityFeature lEntityFeature : features) {
-							if (lEntityFeature instanceof LEntityAttribute) {
-								LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
-										.createLDtoInheritedAttribute();
-								lNewAtt.setInheritedFeature((LAttribute) lEntityFeature);
-								LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-										.createLDtoFeature();
-								lNewAtt.setAnnotationInfo(lAnnTarget);
-								lDto.getFeatures().add(lNewAtt);
-							} else if (lEntityFeature instanceof LEntityReference) {
-								// Mapped dto
-								LDto mapToDto = getMapToDto((LEntityReference) lEntityFeature);
-								if (mapToDto == null) {
-									LOGGER.error("No Mapping-DTO could be found for "
-											+ lEntityFeature.getEntity());
-									continue;
+							// also add features from supertype, if dto does not
+							// extend any dto.
+							List<LEntityFeature> features = lDto.getSuperType() == null ? currentEntity
+									.getAllFeatures() : currentEntity
+									.getFeatures();
+							for (LEntityFeature lEntityFeature : features) {
+								if (lEntityFeature instanceof LEntityAttribute) {
+									LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
+											.createLDtoInheritedAttribute();
+									lNewAtt.setInheritedFeature((LAttribute) lEntityFeature);
+									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+											.createLDtoFeature();
+									lNewAtt.setAnnotationInfo(lAnnTarget);
+									lDto.getFeatures().add(lNewAtt);
+								} else if (lEntityFeature instanceof LEntityReference) {
+									// Mapped dto
+									LDto mapToDto = getMapToDto((LEntityReference) lEntityFeature);
+									if (mapToDto == null) {
+										LOGGER.error("No Mapping-DTO could be found for "
+												+ lEntityFeature.getEntity());
+										continue;
+									}
+
+									LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+											.createLDtoInheritedReference();
+									lNewRef.setInheritedFeature((LReference) lEntityFeature);
+									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+											.createLDtoFeature();
+									lNewRef.setAnnotationInfo(lAnnTarget);
+									lDto.getFeatures().add(lNewRef);
+									lNewRef.setType(mapToDto);
 								}
+							}
+						} else if (lDto.getWrappedType() instanceof LBean) {
+							LBean currentBean = (LBean) lDto.getWrappedType();
+							// now add all features from the entity as inherited
+							// feature
 
-								LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
-										.createLDtoInheritedReference();
-								lNewRef.setInheritedFeature((LReference) lEntityFeature);
-								LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-										.createLDtoFeature();
-								lNewRef.setAnnotationInfo(lAnnTarget);
-								lDto.getFeatures().add(lNewRef);
-								lNewRef.setType(mapToDto);
+							// also add features from supertype, if dto does not
+							// extend any dto.
+							List<LBeanFeature> features = lDto.getSuperType() == null ? currentBean
+									.getAllFeatures() : currentBean
+									.getFeatures();
+							for (LBeanFeature lBeanFeature : features) {
+								if (lBeanFeature instanceof LBeanAttribute) {
+									LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
+											.createLDtoInheritedAttribute();
+									lNewAtt.setInheritedFeature((LAttribute) lBeanFeature);
+									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+											.createLDtoFeature();
+									lNewAtt.setAnnotationInfo(lAnnTarget);
+									lDto.getFeatures().add(lNewAtt);
+								} else if (lBeanFeature instanceof LBeanReference) {
+									// Mapped dto
+									LDto mapToDto = getMapToDto((LEntityReference) lBeanFeature);
+									if (mapToDto == null) {
+										LOGGER.error("No Mapping-DTO could be found for "
+												+ lBeanFeature.getBean());
+										continue;
+									}
+
+									LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+											.createLDtoInheritedReference();
+									lNewRef.setInheritedFeature((LReference) lBeanFeature);
+									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+											.createLDtoFeature();
+									lNewRef.setAnnotationInfo(lAnnTarget);
+									lDto.getFeatures().add(lNewRef);
+									lNewRef.setType(mapToDto);
+								}
 							}
 						}
 					}
