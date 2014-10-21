@@ -11,9 +11,12 @@
 package org.lunifera.ide.core.ui.builder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -27,6 +30,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -36,13 +40,20 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.xtext.naming.QualifiedName;
 import org.eclipse.xtext.resource.IEObjectDescription;
+import org.eclipse.xtext.resource.IReferenceDescription;
 import org.eclipse.xtext.resource.IResourceDescriptions;
 import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider;
+import org.eclipse.xtext.ui.editor.findrefs.IReferenceFinder;
+import org.eclipse.xtext.ui.resource.IStorage2UriMapper;
 import org.eclipse.xtext.ui.resource.XtextResourceSetProvider;
+import org.eclipse.xtext.util.IAcceptor;
+import org.eclipse.xtext.util.Pair;
 import org.lunifera.dsl.semantic.common.types.LAttribute;
 import org.lunifera.dsl.semantic.common.types.LPackage;
 import org.lunifera.dsl.semantic.common.types.LReference;
@@ -53,7 +64,6 @@ import org.lunifera.dsl.semantic.dto.LDto;
 import org.lunifera.dsl.semantic.dto.LDtoFeature;
 import org.lunifera.dsl.semantic.dto.LDtoInheritedAttribute;
 import org.lunifera.dsl.semantic.dto.LDtoInheritedReference;
-import org.lunifera.dsl.semantic.dto.LDtoModel;
 import org.lunifera.dsl.semantic.dto.LunDtoFactory;
 import org.lunifera.dsl.semantic.dto.LunDtoPackage;
 import org.lunifera.dsl.semantic.entity.LBean;
@@ -73,6 +83,7 @@ import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 public class LuniferaBuilder extends IncrementalProjectBuilder {
@@ -88,6 +99,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	private XtextResourceSetProvider rsProvider;
 	@Inject
 	private IResourceDescriptions resourceDescriptions;
+	@SuppressWarnings("restriction")
+	@Inject
+	private IReferenceFinder referenceFinder;
+	@Inject
+	private IStorage2UriMapper uriStorageMapper;
 
 	private boolean firstBuild = true;
 
@@ -175,7 +191,10 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			return;
 		}
 
+		monitor.subTask("Building I18n");
 		incrementalBuildI18n(delta, progress);
+
+		monitor.subTask("Building Dtos");
 		incrementalBuildDtos(delta, progress);
 
 		if (progress.isCanceled())
@@ -314,7 +333,10 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 
 		// getProject().getWorkspace().checkpoint(false);
 		monitor.worked(2);
+		monitor.subTask("Building I18n");
 		fullBuildI18n(project);
+
+		monitor.subTask("Building Dtos");
 		fullBuildDtos(project);
 		monitor.worked(6);
 	}
@@ -425,6 +447,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		return projectDescription;
 	}
 
+	@SuppressWarnings("restriction")
 	private void buildDtos(LEntityModel lEntityModel) {
 		IXtextUtilService service = CoreUiActivator.getDefault()
 				.getUtilService();
@@ -442,136 +465,155 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			}
 		}
 
-		Set<URI> processedResources = new HashSet<URI>();
-		for (IEObjectDescription desc : resourceDescriptions
-				.getExportedObjectsByType(LunDtoPackage.Literals.LAUTO_INHERIT_DTO)) {
-
-			// load the resource by the resource set
-			XtextResourceSet resourceSet = (XtextResourceSet) rsProvider
-					.get(getProject());
-			Resource dtoModelResource = resourceSet.getResource(
-					URI.createURI(desc.getEObjectURI().trimFragment()
-							.toString()), true);
-			processedResources.add(dtoModelResource.getURI());
-
-			// now process all matching dtos
-			LDtoModel dtoModel = (LDtoModel) dtoModelResource.getContents()
-					.get(0);
-			for (LTypedPackage lPkg : dtoModel.getPackages()) {
-				for (LType lType : lPkg.getTypes()) {
-					if (lType instanceof LDto) {
-						LDto lDto = (LDto) lType;
-
-						if (!(lDto instanceof LAutoInheritDto)) {
-							continue;
-						}
-
-						if (!entities.contains(EcoreUtil.getURI(lDto
-								.getWrappedType()))) {
-							// dto does not wrap any of the changed entity
-							continue;
-						}
-
-						// now remove all inherited features. Will be added
-						// again
-						for (Iterator<LDtoFeature> iterator = lDto
-								.getFeatures().iterator(); iterator.hasNext();) {
-							LDtoFeature lFeature = iterator.next();
-							if ((lFeature instanceof LDtoInheritedAttribute)
-									|| (lFeature instanceof LDtoInheritedReference)) {
-								iterator.remove();
-							}
-						}
-
-						if (lDto.getWrappedType() instanceof LEntity) {
-							LEntity currentEntity = (LEntity) lDto
-									.getWrappedType();
-							// now add all features from the entity as inherited
-							// feature
-
-							// also add features from supertype, if dto does not
-							// extend any dto.
-							List<LEntityFeature> features = lDto.getSuperType() == null ? currentEntity
-									.getAllFeatures() : currentEntity
-									.getFeatures();
-							for (LEntityFeature lEntityFeature : features) {
-								if (lEntityFeature instanceof LEntityAttribute) {
-									LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
-											.createLDtoInheritedAttribute();
-									lNewAtt.setInheritedFeature((LAttribute) lEntityFeature);
-									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-											.createLDtoFeature();
-									lNewAtt.setAnnotationInfo(lAnnTarget);
-									lDto.getFeatures().add(lNewAtt);
-								} else if (lEntityFeature instanceof LEntityReference) {
-									// Mapped dto
-									LDto mapToDto = getMapToDto((LEntityReference) lEntityFeature);
-									if (mapToDto == null) {
-										LOGGER.error("No Mapping-DTO could be found for "
-												+ lEntityFeature.getEntity());
-										continue;
-									}
-
-									LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
-											.createLDtoInheritedReference();
-									lNewRef.setInheritedFeature((LReference) lEntityFeature);
-									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-											.createLDtoFeature();
-									lNewRef.setAnnotationInfo(lAnnTarget);
-									lDto.getFeatures().add(lNewRef);
-									lNewRef.setType(mapToDto);
-								}
-							}
-						} else if (lDto.getWrappedType() instanceof LBean) {
-							LBean currentBean = (LBean) lDto.getWrappedType();
-							// now add all features from the entity as inherited
-							// feature
-
-							// also add features from supertype, if dto does not
-							// extend any dto.
-							List<LBeanFeature> features = lDto.getSuperType() == null ? currentBean
-									.getAllFeatures() : currentBean
-									.getFeatures();
-							for (LBeanFeature lBeanFeature : features) {
-								if (lBeanFeature instanceof LBeanAttribute) {
-									LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
-											.createLDtoInheritedAttribute();
-									lNewAtt.setInheritedFeature((LAttribute) lBeanFeature);
-									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-											.createLDtoFeature();
-									lNewAtt.setAnnotationInfo(lAnnTarget);
-									lDto.getFeatures().add(lNewAtt);
-								} else if (lBeanFeature instanceof LBeanReference) {
-									// Mapped dto
-									LDto mapToDto = getMapToDto((LEntityReference) lBeanFeature);
-									if (mapToDto == null) {
-										LOGGER.error("No Mapping-DTO could be found for "
-												+ lBeanFeature.getBean());
-										continue;
-									}
-
-									LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
-											.createLDtoInheritedReference();
-									lNewRef.setInheritedFeature((LReference) lBeanFeature);
-									LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-											.createLDtoFeature();
-									lNewRef.setAnnotationInfo(lAnnTarget);
-									lDto.getFeatures().add(lNewRef);
-									lNewRef.setType(mapToDto);
-								}
-							}
+		final List<IReferenceDescription> referenceTargets = new ArrayList<IReferenceDescription>();
+		referenceFinder.findAllReferences(entities, null,
+				new IAcceptor<IReferenceDescription>() {
+					@Override
+					public void accept(IReferenceDescription t) {
+						if (t.getEReference() == LunDtoPackage.Literals.LDTO__WRAPPED_TYPE) {
+							referenceTargets.add(t);
 						}
 					}
+				}, null);
+
+		List<Resource> affectedResources = new LinkedList<Resource>();
+		Map<IProject, XtextResourceSet> dtoResourceSets = new HashMap<IProject, XtextResourceSet>();
+		for (IReferenceDescription desc : referenceTargets) {
+			IProject dtoProject = null;
+			Iterable<Pair<IStorage, IProject>> pairs = uriStorageMapper
+					.getStorages(desc.getSourceEObjectUri());
+			if (pairs.iterator().hasNext()) {
+				dtoProject = pairs.iterator().next().getSecond();
+			}
+
+			if (dtoProject == null) {
+				LOGGER.error("No project could be found for "
+						+ desc.getSourceEObjectUri());
+				continue;
+			}
+
+			XtextResourceSet resourceSet = null;
+			if (dtoResourceSets.containsKey(dtoProject)) {
+				resourceSet = dtoResourceSets.get(dtoProject);
+			} else {
+				resourceSet = (XtextResourceSet) rsProvider.get(getProject());
+//				resourceSet.getLoadOptions().put(
+//						ResourceDescriptionsProvider.NAMED_BUILDER_SCOPE,
+//						Boolean.TRUE);
+//				((ResourceSetImpl) resourceSet).setURIResourceMap(Maps
+//						.<URI, Resource> newHashMap());
+				dtoResourceSets.put(dtoProject, resourceSet);
+			}
+
+			// load the resource by the resource set
+			Resource dtoModelResource = resourceSet.getResource(desc
+					.getSourceEObjectUri().trimFragment(), true);
+			LDto lDto = (LDto) dtoModelResource.getEObject(desc
+					.getSourceEObjectUri().fragment());
+
+			if (!(lDto instanceof LAutoInheritDto)) {
+				continue;
+			}
+
+			if (!affectedResources.contains(dtoModelResource)) {
+				affectedResources.add(dtoModelResource);
+			}
+
+			// now remove all inherited features. Will be added
+			// again
+			for (Iterator<LDtoFeature> iterator = lDto.getFeatures().iterator(); iterator
+					.hasNext();) {
+				LDtoFeature lFeature = iterator.next();
+				if ((lFeature instanceof LDtoInheritedAttribute)
+						|| (lFeature instanceof LDtoInheritedReference)) {
+					iterator.remove();
 				}
 			}
 
-			try {
-				dtoModelResource.save(SaveOptions.newBuilder().format()
-						.getOptions().toOptionsMap());
-			} catch (IOException e) {
-				LOGGER.error("{}", e);
-			}
+			if (lDto.getWrappedType() instanceof LEntity) {
+				LEntity currentEntity = (LEntity) lDto.getWrappedType();
+				// now add all features from the entity as inherited
+				// feature
 
+				// also add features from supertype, if dto does not
+				// extend any dto.
+				List<LEntityFeature> features = lDto.getSuperType() == null ? currentEntity
+						.getAllFeatures() : currentEntity.getFeatures();
+				for (LEntityFeature lEntityFeature : features) {
+					if (lEntityFeature instanceof LEntityAttribute) {
+						LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
+								.createLDtoInheritedAttribute();
+						lNewAtt.setInheritedFeature((LAttribute) lEntityFeature);
+						LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+								.createLDtoFeature();
+						lNewAtt.setAnnotationInfo(lAnnTarget);
+						lDto.getFeatures().add(lNewAtt);
+					} else if (lEntityFeature instanceof LEntityReference) {
+						// Mapped dto
+						LDto mapToDto = getMapToDto((LEntityReference) lEntityFeature);
+						if (mapToDto == null) {
+							LOGGER.error("No Mapping-DTO could be found for "
+									+ lEntityFeature.getEntity());
+							continue;
+						}
+
+						LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+								.createLDtoInheritedReference();
+						lNewRef.setInheritedFeature((LReference) lEntityFeature);
+						LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+								.createLDtoFeature();
+						lNewRef.setAnnotationInfo(lAnnTarget);
+						lDto.getFeatures().add(lNewRef);
+						lNewRef.setType(mapToDto);
+					}
+				}
+			} else if (lDto.getWrappedType() instanceof LBean) {
+				LBean currentBean = (LBean) lDto.getWrappedType();
+				// now add all features from the entity as inherited
+				// feature
+
+				// also add features from supertype, if dto does not
+				// extend any dto.
+				List<LBeanFeature> features = lDto.getSuperType() == null ? currentBean
+						.getAllFeatures() : currentBean.getFeatures();
+				for (LBeanFeature lBeanFeature : features) {
+					if (lBeanFeature instanceof LBeanAttribute) {
+						LDtoInheritedAttribute lNewAtt = LunDtoFactory.eINSTANCE
+								.createLDtoInheritedAttribute();
+						lNewAtt.setInheritedFeature((LAttribute) lBeanFeature);
+						LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+								.createLDtoFeature();
+						lNewAtt.setAnnotationInfo(lAnnTarget);
+						lDto.getFeatures().add(lNewAtt);
+					} else if (lBeanFeature instanceof LBeanReference) {
+						// Mapped dto
+						LDto mapToDto = getMapToDto((LEntityReference) lBeanFeature);
+						if (mapToDto == null) {
+							LOGGER.error("No Mapping-DTO could be found for "
+									+ lBeanFeature.getBean());
+							continue;
+						}
+
+						LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+								.createLDtoInheritedReference();
+						lNewRef.setInheritedFeature((LReference) lBeanFeature);
+						LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+								.createLDtoFeature();
+						lNewRef.setAnnotationInfo(lAnnTarget);
+						lDto.getFeatures().add(lNewRef);
+						lNewRef.setType(mapToDto);
+					}
+				}
+			}
+		}
+
+		try {
+			for (Resource resource : affectedResources) {
+				resource.save(SaveOptions.newBuilder().format().getOptions()
+						.toOptionsMap());
+			}
+		} catch (IOException e) {
+			LOGGER.error("{}", e);
 		}
 	}
 

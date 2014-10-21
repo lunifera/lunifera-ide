@@ -37,6 +37,8 @@ import org.osgi.service.event.EventHandler;
 import com.google.inject.Inject;
 
 public class I18nRegistryView extends ViewPart {
+	
+	public static final String ID = "org.lunifera.ide.core.ui.i18nview";
 
 	@Inject
 	private II18nRegistry registry;
