@@ -611,6 +611,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			for (Resource resource : affectedResources) {
 				resource.save(SaveOptions.newBuilder().format().getOptions()
 						.toOptionsMap());
+				resource.unload();
 			}
 		} catch (IOException e) {
 			LOGGER.error("{}", e);
