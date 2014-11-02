@@ -29,6 +29,18 @@
          point="org.eclipse.ui.views">
       <view
             category="org.lunifera.eclipse.ui.views.category.Resources"
+            class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory:org.lunifera.ide.core.ui.view.XtextIndexView"
+            icon="icons/lunifera_xtextIndex.png"
+            id="org.lunifera.ide.core.ui.view.xtextindex"
+            name="Xtext-Index View"
+            restorable="true">
+      </view>
+   </extension>
+      <extension
+         id="XtextIndexView"
+         point="org.eclipse.ui.views">
+      <view
+            category="org.lunifera.eclipse.ui.views.category.Resources"
             class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory:org.lunifera.ide.core.ui.i18n.I18nRegistryView"
             icon="icons/lunifera.png"
             id="org.lunifera.ide.core.ui.i18nview"
@@ -67,4 +79,10 @@
         parentCategory="org.eclipse.xtext.projectwiz">
   </category>
 	</extension>
+ <extension
+       point="org.eclipse.xtext.ui.shared.overridingGuiceModule">
+    <module
+          class="org.lunifera.ide.core.ui.shared.internal.SharedStateModuleOverride">
+    </module>
+ </extension>
 </plugin>

@@ -33,5 +33,7 @@ Export-Package: org.lunifera.ide.core.ui;x-internal:=true,
  org.lunifera.ide.core.ui.builder;x-internal:=true,
  org.lunifera.ide.core.ui.i18n;x-internal:=true,
  org.lunifera.ide.core.ui.nature;x-internal:=true,
+ org.lunifera.ide.core.ui.perspective;x-internal:=true,
  org.lunifera.ide.core.ui.project;x-internal:=true,
- org.lunifera.ide.core.ui.util
+ org.lunifera.ide.core.ui.util,
+ org.lunifera.ide.core.ui.view;x-internal:=true

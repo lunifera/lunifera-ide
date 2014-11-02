@@ -115,6 +115,10 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	protected IProject[] build(int kind, Map<String, String> args,
 			IProgressMonitor monitor) throws CoreException {
 
+//		if(1==1){
+//			return getProject().getReferencedProjects();
+//		}
+		
 		long startTime = System.currentTimeMillis();
 		try {
 			if (monitor != null) {
@@ -421,6 +425,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	 */
 	protected II18nRegistry.ProjectDescription fullBuildDtos(
 			final IProject project) throws CoreException {
+		
+		if(1==1) {
+			return null;
+		}
+		
 		final II18nRegistry.ProjectDescription projectDescription = new II18nRegistry.ProjectDescription(
 				getProject());
 		project.accept(new IResourceVisitor() {
