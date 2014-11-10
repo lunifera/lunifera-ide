@@ -634,7 +634,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	 * @return
 	 */
 	private LDto getMapToDto(LEntityReference lEntityFeature) {
-		LEntity entity = lEntityFeature.getType();
+		LEntity entity = lEntityFeature.getType().getLazyResolved();
 		LPackage lPkg = (LPackage) entity.eContainer();
 
 		String pkgName = lPkg.getName();

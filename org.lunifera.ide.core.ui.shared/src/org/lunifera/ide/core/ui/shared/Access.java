@@ -20,3 +20,4 @@ public class Access extends org.eclipse.xtext.ui.shared.Access {
 		return Access.<II18nRegistry> contributedProvider(II18nRegistry.class);
 	}
 }
+ 

@@ -21,8 +21,7 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",
  org.lunifera.ide.core.api,
  org.lunifera.ide.core.ui;bundle-version="0.7.3",
  org.eclipse.xtext.common.types.ui,
- org.eclipse.jdt.core;bundle-version="3.10.0",
- org.lunifera.dsl.xtext.cache
+ org.eclipse.jdt.core;bundle-version="3.10.0"
 Export-Package: org.lunifera.ide.core.ui.shared,
  org.lunifera.ide.core.ui.shared.internal;x-internal:=true,
  org.lunifera.ide.core.ui.shared.resource

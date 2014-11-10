@@ -24,8 +24,8 @@
         </run>
      </builder>
   </extension>
-   <extension
-         id="I18nRegistryView"
+  <extension
+         id="XtextIndexView"
          point="org.eclipse.ui.views">
       <view
             category="org.lunifera.eclipse.ui.views.category.Resources"
@@ -37,7 +37,7 @@
       </view>
    </extension>
       <extension
-         id="XtextIndexView"
+         id="I18nRegistryView"
          point="org.eclipse.ui.views">
       <view
             category="org.lunifera.eclipse.ui.views.category.Resources"

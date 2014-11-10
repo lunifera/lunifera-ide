@@ -202,7 +202,9 @@ public class XtextIndexView extends ViewPart implements IPartListener,
 				.asyncExec(new Runnable() {
 					@Override
 					public void run() {
-						treeViewer.setInput(resource);
+						if (treeViewer != null && resource != null) {
+							treeViewer.setInput(resource);
+						}
 					}
 				});
 
@@ -222,8 +224,9 @@ public class XtextIndexView extends ViewPart implements IPartListener,
 		@Override
 		public Object[] getElements(Object inputElement) {
 			Resource resource = (Resource) inputElement;
-			return new Object[] { builderState.getResourceDescription(resource
-					.getURI()) };
+			IResourceDescription desc = builderState
+					.getResourceDescription(resource.getURI());
+			return desc != null ? new Object[] { desc } : new Object[0];
 		}
 
 		@Override
@@ -259,6 +262,14 @@ public class XtextIndexView extends ViewPart implements IPartListener,
 				elements.add(new Entry(" - target", desc.getTargetEObjectUri()
 						.toString()));
 				return elements.toArray();
+			} else if (parentElement instanceof IEObjectDescription) {
+				IEObjectDescription desc = (IEObjectDescription) parentElement;
+				List<String> userData = new ArrayList<String>();
+				for (String key : desc.getUserDataKeys()) {
+					String data = key + " : " + desc.getUserData(key);
+					userData.add(data);
+				}
+				return userData.toArray();
 			}
 			return null;
 		}
@@ -283,6 +294,8 @@ public class XtextIndexView extends ViewPart implements IPartListener,
 				return !resDescs.refDescs.isEmpty();
 			} else if (element instanceof IReferenceDescription) {
 				return true;
+			} else if (element instanceof IEObjectDescription) {
+				return ((IEObjectDescription) element).getUserDataKeys().length > 0;
 			}
 			return false;
 		}
