@@ -11,6 +11,9 @@
  *******************************************************************************/
 package org.lunifera.ide.core.ui.project;
 
+import static org.eclipse.xtext.ui.util.JREContainerProvider.getDefaultJREContainerEntry;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,10 +25,16 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.ui.wizards.buildpaths.BuildPathSupport;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkingSet;
 import org.eclipse.xtext.ui.util.JavaProjectFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -33,6 +42,9 @@ import com.google.common.collect.Lists;
  * @author Sebastian Zarnekow - Initial contribution and API
  */
 public class BundleProjectFactory extends JavaProjectFactory {
+
+	private static final Logger LOGGER = LoggerFactory
+			.getLogger(BundleProjectFactory.class);
 
 	protected List<String> requiredBundles;
 	protected List<String> exportedPackages;
@@ -67,14 +79,55 @@ public class BundleProjectFactory extends JavaProjectFactory {
 		return this;
 	}
 
+	@SuppressWarnings("restriction")
 	@Override
-	protected void enhanceProject(IProject project, SubMonitor subMonitor,
+	protected void enhanceProject(IProject project, SubMonitor monitor,
 			Shell shell) throws CoreException {
-		super.enhanceProject(project, subMonitor, shell);
-		if (projectNatures.contains("org.eclipse.pde.PluginNature")) {
-			createManifest(project, subMonitor.newChild(1));
-			createBuildProperties(project, subMonitor.newChild(1));
+		super.enhanceProject(project, monitor, shell);
+		SubMonitor subMonitor = SubMonitor.convert(monitor, 10);
+		try {
+			subMonitor.subTask("Configures the bundle " + projectName);
+			IJavaProject javaProject = JavaCore.create(project);
+			List<IClasspathEntry> classpathEntries = new ArrayList<IClasspathEntry>();
+			for (final IProject referencedProject : project
+					.getReferencingProjects()) {
+				final IClasspathEntry referencedProjectClasspathEntry = JavaCore
+						.newProjectEntry(referencedProject.getFullPath());
+				classpathEntries.add(referencedProjectClasspathEntry);
+			}
+			for (final String folderName : folders) {
+				final IFolder sourceFolder = project.getFolder(folderName);
+				final IClasspathEntry srcClasspathEntry = JavaCore
+						.newSourceEntry(sourceFolder.getFullPath());
+				classpathEntries.add(srcClasspathEntry);
+			}
+
+			IClasspathEntry defaultJREContainerEntry = getDefaultJREContainerEntry();
+			classpathEntries.add(defaultJREContainerEntry);
+			addMoreClasspathEntriesTo(classpathEntries);
+
+			javaProject.setRawClasspath(classpathEntries
+					.toArray(new IClasspathEntry[classpathEntries.size()]),
+					subMonitor.newChild(1));
+			javaProject
+					.setOutputLocation(
+							new Path(
+									"/" + project.getName() + "/target/classes"), subMonitor.newChild(1)); //$NON-NLS-1$ //$NON-NLS-2$
+
+			String executionEnvironmentId = JavaRuntime
+					.getExecutionEnvironmentId(defaultJREContainerEntry
+							.getPath());
+			if (executionEnvironmentId != null) {
+				BuildPathSupport.setEEComplianceOptions(javaProject,
+						executionEnvironmentId, null);
+			}
+		} catch (JavaModelException e) {
+			LOGGER.error(e.getMessage(), e);
 		}
+
+		// create bundle
+		createManifest(project, subMonitor.newChild(1));
+		createBuildProperties(project, subMonitor.newChild(1));
 	}
 
 	@Override

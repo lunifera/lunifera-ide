@@ -23,14 +23,16 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",
  org.eclipse.jdt.core,
  org.lunifera.dsl.semantic.entity,
  org.lunifera.dsl.semantic.dto,
- org.lunifera.xtext.builder.ui.access,
+ org.lunifera.xtext.builder.ui.access;bundle-version="[0.8.5,0.9.0)",
  org.eclipse.ui.ide;bundle-version="3.10.0",
  org.eclipse.jdt.ui,
  org.eclipse.search,
- org.eclipse.ui.console
+ org.eclipse.ui.console,
+ org.eclipse.jdt.launching
 Export-Package: org.lunifera.ide.core.ui;x-internal:=true,
  org.lunifera.ide.core.ui.builder;x-internal:=true,
  org.lunifera.ide.core.ui.i18n;x-internal:=true,
  org.lunifera.ide.core.ui.nature;x-internal:=true,
  org.lunifera.ide.core.ui.project;x-internal:=true,
- org.lunifera.ide.core.ui.util
+ org.lunifera.ide.core.ui.util,
+ org.lunifera.ide.core.ui.view;x-internal:=true

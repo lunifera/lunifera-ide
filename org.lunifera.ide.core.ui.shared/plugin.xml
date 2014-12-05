@@ -24,6 +24,18 @@
         </run>
      </builder>
   </extension>
+  <extension
+         id="XtextIndexView"
+         point="org.eclipse.ui.views">
+      <view
+            category="org.lunifera.eclipse.ui.views.category.Resources"
+            class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory:org.lunifera.ide.core.ui.view.XtextIndexView"
+            icon="icons/lunifera_xtextIndex.png"
+            id="org.lunifera.ide.core.ui.view.xtextindex"
+            name="Xtext-Index View"
+            restorable="true">
+      </view>
+   </extension>
    <extension
          id="I18nRegistryView"
          point="org.eclipse.ui.views">
