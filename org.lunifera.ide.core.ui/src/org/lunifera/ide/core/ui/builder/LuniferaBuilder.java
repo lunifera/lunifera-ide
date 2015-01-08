@@ -40,7 +40,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.xtext.naming.QualifiedName;
 import org.eclipse.xtext.resource.IEObjectDescription;
@@ -48,7 +47,6 @@ import org.eclipse.xtext.resource.IReferenceDescription;
 import org.eclipse.xtext.resource.IResourceDescriptions;
 import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.resource.XtextResourceSet;
-import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider;
 import org.eclipse.xtext.ui.editor.findrefs.IReferenceFinder;
 import org.eclipse.xtext.ui.resource.IStorage2UriMapper;
 import org.eclipse.xtext.ui.resource.XtextResourceSetProvider;
@@ -75,6 +73,7 @@ import org.lunifera.dsl.semantic.entity.LEntityAttribute;
 import org.lunifera.dsl.semantic.entity.LEntityFeature;
 import org.lunifera.dsl.semantic.entity.LEntityModel;
 import org.lunifera.dsl.semantic.entity.LEntityReference;
+import org.lunifera.dsl.xtext.lazyresolver.api.ISemanticLoadingResource;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.api.i18n.II18nRegistry;
 import org.lunifera.ide.core.ui.CoreUiActivator;
@@ -83,7 +82,6 @@ import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 public class LuniferaBuilder extends IncrementalProjectBuilder {
@@ -497,19 +495,27 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				resourceSet = dtoResourceSets.get(dtoProject);
 			} else {
 				resourceSet = (XtextResourceSet) rsProvider.get(getProject());
-//				resourceSet.getLoadOptions().put(
-//						ResourceDescriptionsProvider.NAMED_BUILDER_SCOPE,
-//						Boolean.TRUE);
-//				((ResourceSetImpl) resourceSet).setURIResourceMap(Maps
-//						.<URI, Resource> newHashMap());
+				// resourceSet.getLoadOptions().put(
+				// ResourceDescriptionsProvider.NAMED_BUILDER_SCOPE,
+				// Boolean.TRUE);
+				// ((ResourceSetImpl) resourceSet).setURIResourceMap(Maps
+				// .<URI, Resource> newHashMap());
 				dtoResourceSets.put(dtoProject, resourceSet);
 			}
 
 			// load the resource by the resource set
 			Resource dtoModelResource = resourceSet.getResource(desc
 					.getSourceEObjectUri().trimFragment(), true);
-			LDto lDto = (LDto) dtoModelResource.getEObject(desc
-					.getSourceEObjectUri().fragment());
+
+			LDto lDto = null;
+			if (dtoModelResource instanceof ISemanticLoadingResource) {
+				lDto = (LDto) ((ISemanticLoadingResource) dtoModelResource)
+						.getSemanticElement(desc.getSourceEObjectUri()
+								.fragment());
+			} else {
+				lDto = (LDto) dtoModelResource.getEObject(desc
+						.getSourceEObjectUri().fragment());
+			}
 
 			if (!(lDto instanceof LAutoInheritDto)) {
 				continue;
@@ -648,6 +654,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private <A extends EObject> A loadSemanticModel(IFile file) {
 		LOGGER.info("loading:" + file.getName());
 		org.eclipse.emf.common.util.URI entityDSLURI = org.eclipse.emf.common.util.URI
@@ -660,8 +667,14 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			e.printStackTrace();
 			return null;
 		}
-		@SuppressWarnings("unchecked")
-		A entityModel = (A) entityResource.getContents().get(0);
+		A entityModel = null;
+		if (entityResource instanceof ISemanticLoadingResource) {
+			entityModel = (A) ((ISemanticLoadingResource) entityResource)
+					.getSemanticElement();
+		} else {
+			entityModel = (A) entityResource.getContents().get(0);
+		}
+
 		LOGGER.info("finished loading:" + file.getName());
 		return entityModel;
 	}
