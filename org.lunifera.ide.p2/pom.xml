@@ -22,7 +22,7 @@
 	<name>P2 for Lunifera IDE</name>
 
 	<properties>
-		<lunifera.deployment.p2.label>dependencies</lunifera.deployment.p2.label>
+		<lunifera.deployment.p2.label>ide</lunifera.deployment.p2.label>
 	</properties>
 
 	<profiles>
