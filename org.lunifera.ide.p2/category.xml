@@ -7,8 +7,7 @@
       <category name="Lunifera IDE"/>
    </feature>
    <feature url="features/org.lunifera.ide.feature.tools_0.7.5.qualifier.jar" id="org.lunifera.ide.feature.tools" version="0.7.5.qualifier">
-      <category name="Lunifera Developer Tools for IDE"/>
+      <category name="Lunifera IDE"/>
    </feature>
    <category-def name="Lunifera IDE" label="Lunifera IDE"/>
-   <category-def name="Lunifera Developer Tools for IDE" label="Lunifera Developer Tools for IDE"/>
 </site>
