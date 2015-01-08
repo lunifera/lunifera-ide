@@ -101,7 +101,7 @@ public class XtextIndexView extends ViewPart implements IPartListener,
 				} else if (element instanceof IReferenceDescription) {
 					IReferenceDescription desc = (IReferenceDescription) element;
 					return desc.getEReference().getName() + "--"
-							+ desc.getContainerEObjectURI().toString();
+							+ (desc.getContainerEObjectURI() != null ? desc.getContainerEObjectURI().toString() : "null");
 				} else if (element instanceof Entry) {
 					Entry entry = (Entry) element;
 					return entry.key + ":  " + entry.value;
@@ -256,7 +256,8 @@ public class XtextIndexView extends ViewPart implements IPartListener,
 				elements.add(new Entry(" - index", Integer.toString(desc
 						.getIndexInList())));
 				elements.add(new Entry(" - container", desc
-						.getContainerEObjectURI().toString()));
+						.getContainerEObjectURI() != null ? desc
+						.getContainerEObjectURI().toString() : "null"));
 				elements.add(new Entry(" - source", desc.getSourceEObjectUri()
 						.toString()));
 				elements.add(new Entry(" - target", desc.getTargetEObjectUri()
