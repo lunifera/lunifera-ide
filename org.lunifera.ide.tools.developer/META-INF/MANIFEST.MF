@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Developer Tools
 Bundle-SymbolicName: org.lunifera.ide.tools.developer;singleton:=true
-Bundle-Version: 0.8.1.qualifier
+Bundle-Version: 0.7.5.qualifier
 Bundle-Activator: org.lunifera.ide.tools.developer.Activator
 Bundle-Vendor: Lunifera GmbH
 Require-Bundle: org.eclipse.ui,
