@@ -6,9 +6,9 @@
    <feature url="features/org.lunifera.ide.feature.headless_0.7.5.qualifier.jar" id="org.lunifera.ide.feature.headless" version="0.7.5.qualifier">
       <category name="Lunifera IDE"/>
    </feature>
-   <bundle id="org.lunifera.ide.tools.developer" version="0.7.5.qualifier">
+   <feature url="features/org.lunifera.ide.feature.tools_0.7.5.qualifier.jar" id="org.lunifera.ide.feature.tools" version="0.7.5.qualifier">
       <category name="Lunifera Developer Tools for IDE"/>
-   </bundle>
+   </feature>
    <category-def name="Lunifera IDE" label="Lunifera IDE"/>
    <category-def name="Lunifera Developer Tools for IDE" label="Lunifera Developer Tools for IDE"/>
 </site>
