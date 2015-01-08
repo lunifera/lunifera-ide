@@ -119,14 +119,11 @@ public class DependencyVersionUpdate {
 					// Replace version with version in .depVersions file
 					VersionDef def = findVersionDef(name);
 					if (def != null) {
-						switch (header) {
-						case "ip":
+						if (header.equals("ip")) {
 							newLine = def.createImportPackage(line);
-							break;
-						case "rb":
+						} else if (header.equals("rb")) {
 							newLine = def.createRequireBundle(line);
-							break;
-						default:
+						} else {
 							throw new IllegalStateException();
 						}
 					}
