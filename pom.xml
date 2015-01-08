@@ -53,8 +53,10 @@
 		<module>org.lunifera.ide.core.ui</module>
 		<module>org.lunifera.ide.core.ui.shared</module>
 		<module>org.lunifera.ide.p2</module>
+		<module>org.lunifera.ide.tools.developer</module>
 		<module>org.lunifera.ide.feature.ui</module>
 		<module>org.lunifera.ide.feature.headless</module>
+		<module>org.lunifera.ide.feature.tools</module>
 	</modules>
 
 	<profiles>
