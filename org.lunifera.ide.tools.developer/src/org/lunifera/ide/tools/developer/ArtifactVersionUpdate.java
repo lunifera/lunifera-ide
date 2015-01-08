@@ -282,7 +282,7 @@ public class ArtifactVersionUpdate {
 				inRequire = true;
 			} else if (line.contains("</requires>")) {
 				inRequire = false;
-			} else if (line.contains("<plugin>")) {
+			} else if (line.contains("<plugin")) {
 				inPlugin = true;
 			} else if (inPlugin && line.contains("/>")) {
 				inPlugin = false;
