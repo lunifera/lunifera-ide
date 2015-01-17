@@ -29,7 +29,9 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",
  org.eclipse.search,
  org.eclipse.ui.console,
  org.eclipse.jdt.launching,
- org.lunifera.dsl.xtext.lazyresolver.api;bundle-version="0.7.5"
+ org.lunifera.dsl.xtext.lazyresolver.api;bundle-version="0.7.5",
+ org.lunifera.ecview.core.common.model;bundle-version="0.8.1",
+ org.lunifera.ecview.core.extension.model;bundle-version="0.8.1"
 Export-Package: org.lunifera.ide.core.ui;x-internal:=true,
  org.lunifera.ide.core.ui.builder;x-internal:=true,
  org.lunifera.ide.core.ui.i18n;x-internal:=true,
