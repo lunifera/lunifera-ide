@@ -113,7 +113,7 @@ public class DependencyVersionUpdate {
 
 				// Get bundle name (after first space)
 				String tokens[] = line.split(" ");
-				if (tokens.length > 0) {
+				if (tokens.length > 1) {
 					String name = tokens[1];
 
 					// Replace version with version in .depVersions file
