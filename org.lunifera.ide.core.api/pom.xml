@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.lunifera.ide</groupId>
 		<artifactId>org.lunifera.ide</artifactId>
-		<version>0.7.4</version>
+		<version>0.9.0</version>
 	</parent>
 	<artifactId>org.lunifera.ide.core.api</artifactId>
 	<packaging>eclipse-plugin</packaging>
@@ -90,7 +90,7 @@
 			<plugin>
 				<groupId>com.vaadin</groupId>
 				<artifactId>vaadin-maven-plugin</artifactId>
-				<version>7.2-SNAPSHOT</version>
+				<version>7.3.8</version>
 				<configuration>
 					<extraJvmArgs>-Xmx1024M -Xss1024k</extraJvmArgs>
 					<!-- <runTarget>mobilemail</runTarget> -->
@@ -200,7 +200,7 @@
 									<pluginExecutionFilter>
 										<groupId>com.vaadin</groupId>
 										<artifactId>vaadin-maven-plugin</artifactId>
-										<versionRange>[2.3.0-1,)</versionRange>
+										<versionRange>7.3.8</versionRange>
 										<goals>
 											<goal>resources</goal>
 										</goals>
@@ -213,7 +213,7 @@
 									<pluginExecutionFilter>
 										<groupId>com.vaadin</groupId>
 										<artifactId>vaadin-maven-plugin</artifactId>
-										<versionRange>[1.0.2,)</versionRange>
+										<versionRange>7.3.8</versionRange>
 										<goals>
 											<goal>update-widgetset</goal>
 										</goals>

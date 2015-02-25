@@ -63,4 +63,23 @@
          </enablement>
       </decorator>
    </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="Lunifera"
+            icon="/icons/luniferaPerspective.png"
+            class="org.lunifera.ide.core.ui.perspective.LuniferaPerspectiveFactory"
+            id="org.lunifera.ide.core.ui.LuniferaPerspective">
+         <description>
+            Provides views for Lunifera project
+         </description>
+      </perspective> 
+    </extension>
+       <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="org.lunifera.eclipse.ui.views.category.Resources"
+            name="Lunifera Views">
+      </category>
+   </extension>
 </plugin>

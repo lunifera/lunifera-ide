@@ -14,11 +14,13 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.lunifera.xtext.builder.ui.access.IXtextUtilService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +36,8 @@ public class CoreUiActivator extends AbstractUIPlugin {
 	}
 
 	private EventAdmin eventAdmin;
+	private ServiceTracker<IXtextUtilService, IXtextUtilService> utilServiceTracker;
+	private IXtextUtilService utilService;
 
 	@Override
 	public void start(BundleContext context) throws Exception {
@@ -53,6 +57,10 @@ public class CoreUiActivator extends AbstractUIPlugin {
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		if (utilServiceTracker != null) {
+			utilServiceTracker.close();
+			utilService = null;
+		}
 		plugin = null;
 		super.stop(context);
 	}
@@ -79,6 +87,29 @@ public class CoreUiActivator extends AbstractUIPlugin {
 				props);
 		return getBundle().getBundleContext().registerService(
 				EventHandler.class, handler, castedProps);
+	}
+
+	/**
+	 * Provides the utilService.
+	 * 
+	 * @return
+	 */
+	public IXtextUtilService getUtilService() {
+		if (utilService == null) {
+			utilServiceTracker = new ServiceTracker<IXtextUtilService, IXtextUtilService>(
+					getBundle().getBundleContext(), IXtextUtilService.class,
+					null);
+			utilServiceTracker.open();
+			try {
+				utilService = utilServiceTracker.waitForService(1000);
+			} catch (InterruptedException e) {
+			}
+			if (utilService == null) {
+				LOGGER.error("IXtextUtilService could not be found. Building DTOs and Services not possible.");
+			}
+		}
+
+		return utilService;
 	}
 
 }
