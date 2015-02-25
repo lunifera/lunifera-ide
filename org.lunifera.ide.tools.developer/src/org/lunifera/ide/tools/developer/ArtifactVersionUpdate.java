@@ -224,7 +224,7 @@ public class ArtifactVersionUpdate {
 				if (isParentCoordinate) {
 
 					// Parent is P2
-					if (pom.getFullPath().toString().contains("p2")) {
+					if (pom.getFullPath().toString().endsWith("p2")) {
 						newLine = line.replaceFirst(
 								POM_ARTIFACT_OLD_VERSION_REGEX, String.format(
 										POM_ARTIFACT_NEW_VERSION,
