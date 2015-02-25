@@ -185,7 +185,9 @@ public class DependencyVersionUpdate {
 
 					// Replace version with version in .depVersions file
 					VersionDef def = findVersionDef(name);
-					newLine = def.createFeatureRequires(line);
+					if(def != null) {
+						newLine = def.createFeatureRequires(line);
+					}
 				}
 			}
 
