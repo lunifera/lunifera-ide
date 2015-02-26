@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Resources for the IDE
 Bundle-SymbolicName: org.lunifera.ide.core.ui;singleton:=true
-Bundle-Version: 0.7.5.qualifier
+Bundle-Version: 0.9.1.qualifier
 Bundle-Activator: org.lunifera.ide.core.ui.CoreUiActivator
 Bundle-Vendor: Lunifera.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
@@ -15,7 +15,7 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",
  org.eclipse.xtext.builder;bundle-version="[2.7.3,2.8.0)",
  org.eclipse.ui.workbench,
  org.eclipse.ui;bundle-version="3.106.0",
- org.lunifera.ide.core;bundle-version="0.7.3",
+ org.lunifera.ide.core;bundle-version="[0.9.0,0.10.0)",
  org.eclipse.xtext.ui;bundle-version="[2.7.3,2.8.0)",
  org.eclipse.xtext.ui.shared;bundle-version="[2.7.3,2.8.0)",
  org.lunifera.ide.core.api,
@@ -29,9 +29,9 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",
  org.eclipse.search,
  org.eclipse.ui.console,
  org.eclipse.jdt.launching,
- org.lunifera.dsl.xtext.lazyresolver.api;bundle-version="0.7.5",
- org.lunifera.ecview.core.common.model;bundle-version="0.8.1",
- org.lunifera.ecview.core.extension.model;bundle-version="0.8.1",
+ org.lunifera.dsl.xtext.lazyresolver.api;bundle-version="[0.9.0,0.10.0)",
+ org.lunifera.ecview.core.common.model;bundle-version="[0.9.0,0.10.0)",
+ org.lunifera.ecview.core.extension.model;bundle-version="[0.9.0,0.10.0)",
  org.eclipse.pde.ui,
  org.eclipse.equinox.p2.metadata
 Export-Package: org.lunifera.ide.core.ui;x-internal:=true,

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" activate="activate" deactivate="deactivate" name="org.lunifera.ide.tools.p2.mirror.ConsoleCommands">
+   <implementation class="org.lunifera.ide.tools.p2.mirror.ConsoleCommands"/>
+   <service>
+      <provide interface="org.eclipse.osgi.framework.console.CommandProvider"/>
+   </service>
+   <reference bind="bindArtifacts" cardinality="1..1" interface="org.osgi.service.application.ApplicationDescriptor" name="Artifacts" policy="static" target="(service.pid=org.eclipse.equinox.p2.artifact.repository.mirrorApplication)"/>
+   <reference bind="bindMetadata" cardinality="1..1" interface="org.osgi.service.application.ApplicationDescriptor" name="Metadata" policy="static" target="(service.pid=org.eclipse.equinox.p2.metadata.repository.mirrorApplication)"/>
+</scr:component>

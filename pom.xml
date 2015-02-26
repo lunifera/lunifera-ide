@@ -15,13 +15,13 @@
 
 	<groupId>org.lunifera.ide</groupId>
 	<artifactId>org.lunifera.ide</artifactId>
-	<version>0.7.5-SNAPSHOT</version>
+	<version>0.9.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>org.lunifera.releng.maven</groupId>
 		<artifactId>lunifera-releng-maven-parent-tycho</artifactId>
-		<version>0.12.3-SNAPSHOT</version>
+		<version>0.12.5-SNAPSHOT</version>
 	</parent>
 
 	<url>${lunifera.site.repository.url}</url>
@@ -53,6 +53,8 @@
 		<module>org.lunifera.ide.core.ui</module>
 		<module>org.lunifera.ide.core.ui.shared</module>
 		<module>org.lunifera.ide.tools.developer</module>
+		<module>org.lunifera.ide.tools.p2.mirror</module>
+		<module>org.lunifera.ide.tools.p2.mirror.product</module>
 		<module>org.lunifera.ide.p2</module>
 		<module>org.lunifera.ide.feature.ui</module>
 		<module>org.lunifera.ide.feature.headless</module>
@@ -69,6 +71,18 @@
 			</activation>
 			<modules>
 				<module>org.lunifera.ide.p2</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>build.product</id>
+			<activation>
+				<property>
+					<name>lunifera.build.product</name>
+				</property>
+			</activation>
+			<modules>
+				<module>org.lunifera.ide.tools.p2.mirror</module>
+				<module>org.lunifera.ide.tools.p2.mirror.product</module>
 			</modules>
 		</profile>
 	</profiles>
