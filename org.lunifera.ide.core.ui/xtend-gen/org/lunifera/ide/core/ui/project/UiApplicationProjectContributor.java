@@ -15,18 +15,15 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.ui.util.IProjectFactoryContributor;
 import org.lunifera.ide.core.ui.project.DefaultProjectFactoryContributor;
-import org.lunifera.ide.core.ui.project.FileUtil;
 import org.lunifera.ide.core.ui.project.LuniferaProjectInfo;
 
 @SuppressWarnings("all")
-public class EntityProjectContributor extends DefaultProjectFactoryContributor {
+public class UiApplicationProjectContributor extends DefaultProjectFactoryContributor {
   private LuniferaProjectInfo projectInfo;
   
   private String sourceRoot;
   
-  private String modelRoot;
-  
-  public EntityProjectContributor(final LuniferaProjectInfo projectInfo) {
+  public UiApplicationProjectContributor(final LuniferaProjectInfo projectInfo) {
     this.projectInfo = projectInfo;
   }
   
@@ -34,23 +31,7 @@ public class EntityProjectContributor extends DefaultProjectFactoryContributor {
     this.sourceRoot = sourceRoot;
   }
   
-  public void setModelRoot(final String modelRoot) {
-    this.modelRoot = modelRoot;
-  }
-  
   public void contributeFiles(final IProject project, final IProjectFactoryContributor.IFileCreator creator) {
-    boolean _isCarstoreDemoProject = this.projectInfo.isCarstoreDemoProject();
-    if (_isCarstoreDemoProject) {
-      String _masterDataEntity = this.masterDataEntity();
-      String _generalEntityFilePath = this.projectInfo.getGeneralEntityFilePath();
-      String _plus = ((this.modelRoot + "/") + _generalEntityFilePath);
-      creator.writeToFile(_masterDataEntity, _plus);
-      String _transactionDataEntity = this.transactionDataEntity();
-      String _transactionEntityFilePath = this.projectInfo.getTransactionEntityFilePath();
-      String _plus_1 = ((this.modelRoot + "/") + _transactionEntityFilePath);
-      creator.writeToFile(_transactionDataEntity, _plus_1);
-    }
-    this.contributePreferences(creator);
     this.contributeBuildProperties(creator);
     boolean _isCreateEclipseRuntimeLaunchConfig = this.projectInfo.isCreateEclipseRuntimeLaunchConfig();
     if (_isCreateEclipseRuntimeLaunchConfig) {
@@ -58,7 +39,6 @@ public class EntityProjectContributor extends DefaultProjectFactoryContributor {
       creator.writeToFile(_launchConfig, ".launch/Launch Runtime Eclipse.launch");
     }
     this.contributePom(creator);
-    this.contributePersistenceXML(creator);
   }
   
   private IFile contributeBuildProperties(final IProjectFactoryContributor.IFileCreator fileWriter) {
@@ -77,155 +57,6 @@ public class EntityProjectContributor extends DefaultProjectFactoryContributor {
     _builder.append(".,");
     _builder.newLine();
     return this.writeToFile(_builder, fileWriter, "build.properties");
-  }
-  
-  private IFile contributePreferences(final IProjectFactoryContributor.IFileCreator fileWriter) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("autobuilding=true");
-    _builder.newLine();
-    _builder.append("eclipse.preferences.version=1");
-    _builder.newLine();
-    _builder.append("is_project_specific=true");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.cleanDirectory=false");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.cleanupDerived=true");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.createDirectory=true");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.derived=true");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.directory=./src-gen");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.hideLocalSyntheticVariables=true");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.installDslAsPrimarySource=false");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.keepLocalHistory=true");
-    _builder.newLine();
-    _builder.append("outlet.DEFAULT_OUTPUT.override=true");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.cleanDirectory=false");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.cleanupDerived=false");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.createDirectory=true");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.derived=false");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.directory=../org.lunifera.samples.carstore.dtos/models");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.hideLocalSyntheticVariables=true");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.installDslAsPrimarySource=false");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.keepLocalHistory=true");
-    _builder.newLine();
-    _builder.append("outlet.DTOs.override=false");
-    _builder.newLine();
-    return this.writeToFile(_builder, fileWriter, "/.settings/org.lunifera.dsl.entity.xtext.EntityGrammar.prefs");
-  }
-  
-  private String masterDataEntity() {
-    return FileUtil.readFile("data/entity/GeneralCarstore.entitymodel-template");
-  }
-  
-  private String transactionDataEntity() {
-    return FileUtil.readFile("data/entity/TransactionCarstore.entitymodel-template");
-  }
-  
-  private IFile contributePersistenceXML(final IProjectFactoryContributor.IFileCreator fileWriter) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-    _builder.newLine();
-    _builder.append("<persistence xmlns=\"http://java.sun.com/xml/ns/persistence\"");
-    _builder.newLine();
-    _builder.append("\t");
-    _builder.append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
-    _builder.newLine();
-    _builder.append("\t");
-    _builder.append("xsi:schemaLocation=\"http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd\"");
-    _builder.newLine();
-    _builder.append("\t");
-    _builder.append("version=\"2.0\">");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("\t");
-    _builder.append("<persistence-unit name=\"");
-    String _applicationName = this.projectInfo.getApplicationName();
-    _builder.append(_applicationName, "\t");
-    _builder.append("\">");
-    _builder.newLineIfNotEmpty();
-    _builder.append("\t\t");
-    _builder.append("<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>");
-    _builder.newLine();
-    _builder.append("\t\t");
-    _builder.append("<exclude-unlisted-classes>false</exclude-unlisted-classes>");
-    _builder.newLine();
-    _builder.append("\t\t");
-    _builder.append("<properties>");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.target-database\" value=\"Derby\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"javax.persistence.jdbc.driver\" value=\"org.apache.derby.jdbc.EmbeddedDriver\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"javax.persistence.jdbc.url\"");
-    _builder.newLine();
-    _builder.append("\t\t\t\t");
-    _builder.append("value=\"jdbc:derby:testDB;create=true\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"javax.persistence.jdbc.user\" value=\"app\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"javax.persistence.jdbc.password\" value=\"app\" />");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.logging.level\" value=\"FINE\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.logging.timestamp\" value=\"false\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.logging.thread\" value=\"false\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.logging.exceptions\" value=\"true\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.orm.throw.exceptions\" value=\"true\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.jdbc.read-connections.min\"");
-    _builder.newLine();
-    _builder.append("\t\t\t\t");
-    _builder.append("value=\"1\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.jdbc.write-connections.min\"");
-    _builder.newLine();
-    _builder.append("\t\t\t\t");
-    _builder.append("value=\"1\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.ddl-generation\" value=\"drop-and-create-tables\" />");
-    _builder.newLine();
-    _builder.append("\t\t\t");
-    _builder.append("<property name=\"eclipselink.weaving\" value=\"true\" />");
-    _builder.newLine();
-    _builder.append("\t\t");
-    _builder.append("</properties>");
-    _builder.newLine();
-    _builder.append("\t");
-    _builder.append("</persistence-unit>");
-    _builder.newLine();
-    _builder.append("</persistence>");
-    _builder.newLine();
-    return this.writeToFile(_builder, fileWriter, "META-INF/persistence.xml");
   }
   
   private CharSequence launchConfig() {
@@ -342,8 +173,8 @@ public class EntityProjectContributor extends DefaultProjectFactoryContributor {
     _builder.newLine();
     _builder.append("\t");
     _builder.append("<artifactId>");
-    String _entityProjectName = this.projectInfo.getEntityProjectName();
-    _builder.append(_entityProjectName, "\t");
+    String _uiApplicationProjectName = this.projectInfo.getUiApplicationProjectName();
+    _builder.append(_uiApplicationProjectName, "\t");
     _builder.append("</artifactId>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t");
@@ -352,19 +183,18 @@ public class EntityProjectContributor extends DefaultProjectFactoryContributor {
     _builder.append("\t");
     _builder.newLine();
     _builder.append("\t");
-    _builder.append("<name>JPA entities for ");
+    _builder.append("<name>Vaaclipse UserInterface for ");
     String _applicationName = this.projectInfo.getApplicationName();
     _builder.append(_applicationName, "\t");
     _builder.append("</name>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t");
-    _builder.append("<description>JPA entities for ");
+    _builder.append("<description>Vaaclipse UserInterface for ");
     String _applicationName_1 = this.projectInfo.getApplicationName();
     _builder.append(_applicationName_1, "\t");
     _builder.append("</description>");
     _builder.newLineIfNotEmpty();
     _builder.append("</project>");
-    _builder.newLine();
     _builder.newLine();
     return this.writeToFile(_builder, fileWriter, "pom.xml");
   }

@@ -43,14 +43,13 @@ class P2ProjectContributor extends DefaultProjectFactoryContributor {
 				xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 				<modelVersion>4.0.0</modelVersion>
 				<parent>
-					<groupId>org.lunifera.releng.maven</groupId>
-					<artifactId>lunifera-releng-maven-parent-tycho</artifactId>
-					<version>0.12.3-SNAPSHOT</version>
+					<groupId>«projectInfo.projectName»</groupId>
+					<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
+					<version>«projectInfo.pomProjectVersion»</version>
+					<relativePath>../../</relativePath>
 				</parent>
 			
-				<groupId>«projectInfo.projectName»</groupId>
 				<artifactId>«projectInfo.p2ProjectName»</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
 				<packaging>eclipse-repository</packaging>
 			
 				<name>P2-Repository for «projectInfo.applicationName»</name>

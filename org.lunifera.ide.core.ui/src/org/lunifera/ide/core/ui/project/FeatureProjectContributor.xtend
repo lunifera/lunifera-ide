@@ -46,9 +46,10 @@ class FeatureProjectContributor extends DefaultProjectFactoryContributor {
 				<parent>
 					<groupId>«projectInfo.projectName»</groupId>
 					<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
-					<version>0.0.1-SNAPSHOT</version>
+					<version>«projectInfo.pomProjectVersion»</version>
+					<relativePath>../../</relativePath>
 				</parent>
-				
+				 
 				<artifactId>«projectInfo.featureProjectName»</artifactId>
 				<packaging>eclipse-feature</packaging>
 				
@@ -86,33 +87,47 @@ class FeatureProjectContributor extends DefaultProjectFactoryContributor {
 			<feature
 			      id="«projectInfo.featureProjectName»"
 			      label="Feature «projectInfo.applicationName»"
-			      version="0.0.1.qualifier"
-			      provider-name="My Company">
+			      version="«projectInfo.bundleProjectVersion»"
+			      provider-name="Lunifera GmbH">
 			
 			   <description>
 			     An SDK feature for «projectInfo.applicationName»
 			   </description>
 			
 			   <copyright>
-			   		MyCompany
+			   		Lunifera GmbH
 			   </copyright>
 			
 			   <plugin
-			         id="«projectInfo.dtoServicesProjectName»"
+			         id="org.lunifera.samples.carstore.dtos"
 			         download-size="0"
 			         install-size="0"
 			         version="0.0.0"
 			         unpack="false"/>
 			
 			   <plugin
-			         id="«projectInfo.entityProjectName»"
+			         id="org.lunifera.samples.carstore.entities"
 			         download-size="0"
 			         install-size="0"
 			         version="0.0.0"
 			         unpack="false"/>
 			
-			    <plugin
-			         id="«projectInfo.uiProjectName»"
+			   <plugin
+			         id="org.lunifera.samples.carstore.ui.application"
+			         download-size="0"
+			         install-size="0"
+			         version="0.0.0"
+			         unpack="false"/>
+			
+			   <plugin
+			         id="org.lunifera.samples.carstore.bootstrap"
+			         download-size="0"
+			         install-size="0"
+			         version="0.0.0"
+			         unpack="false"/>
+			
+			   <plugin
+			         id="org.lunifera.samples.carstore.ui.mobile"
 			         download-size="0"
 			         install-size="0"
 			         version="0.0.0"

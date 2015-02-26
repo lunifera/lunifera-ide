@@ -1,0 +1,50 @@
+package org.lunifera.samples.carstore.entities.sales {
+
+	import org.lunifera.samples.carstore.entities.general.Base;
+	import org.lunifera.samples.carstore.entities.general.Customer;
+	import org.lunifera.samples.carstore.entities.general.PaymentTerm;
+	import org.lunifera.samples.carstore.entities.general.Item;
+	import org.lunifera.samples.carstore.entities.general.Price;
+	import org.lunifera.samples.carstore.entities.general.Amount;
+	import org.lunifera.samples.carstore.entities.general.Quantity;
+	import org.lunifera.samples.carstore.entities.general.ConfigDetailDefinition;
+
+	entity SalesOrder extends Base {
+		var String number;
+		ref Customer customer;
+		ref PaymentTerm paymentTerm;
+	}
+	 
+	entity SalesOrderDetail extends Base {
+		var int number;
+		ref Item item;
+		ref PaymentTerm paymentTerm;
+		var Price price;
+		var Quantity quantity;
+		var Amount value;
+		ref cascade CarConfigDetail[*] configDetails opposite parent;
+	}
+	
+	entity CarConfigDetail extends Base {
+		var int number;
+		ref SalesOrderDetail parent opposite configDetails;
+		ref ConfigDetailDefinition configDef;
+	}
+	
+	entity ManufacturerOrder extends Base {
+		var String number;
+		ref SalesOrderDetail salesOrderDetail;
+	}
+	   
+	entity CarReceipt extends Base {
+		var String number;
+		ref ManufacturerOrder order;
+	}
+	
+	entity Inventory extends Base {
+		ref Item item;
+		var Quantity requestedQuantity;
+		var Quantity countedQuantity;
+	}
+
+}

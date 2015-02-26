@@ -15,6 +15,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.ui.util.IProjectFactoryContributor;
 import org.lunifera.ide.core.ui.project.DefaultProjectFactoryContributor;
+import org.lunifera.ide.core.ui.project.FileUtil;
 import org.lunifera.ide.core.ui.project.LuniferaProjectInfo;
 
 @SuppressWarnings("all")
@@ -22,6 +23,8 @@ public class DtoServicesProjectContributor extends DefaultProjectFactoryContribu
   private LuniferaProjectInfo projectInfo;
   
   private String sourceRoot;
+  
+  private String modelRoot;
   
   public DtoServicesProjectContributor(final LuniferaProjectInfo projectInfo) {
     this.projectInfo = projectInfo;
@@ -31,7 +34,22 @@ public class DtoServicesProjectContributor extends DefaultProjectFactoryContribu
     this.sourceRoot = sourceRoot;
   }
   
+  public void setModelRoot(final String modelRoot) {
+    this.modelRoot = modelRoot;
+  }
+  
   public void contributeFiles(final IProject project, final IProjectFactoryContributor.IFileCreator creator) {
+    boolean _isCarstoreDemoProject = this.projectInfo.isCarstoreDemoProject();
+    if (_isCarstoreDemoProject) {
+      String _generalDataDtoMobile = this.generalDataDtoMobile();
+      String _generalMobileDtoFilePath = this.projectInfo.getGeneralMobileDtoFilePath();
+      String _plus = ((this.modelRoot + "/custom/") + _generalMobileDtoFilePath);
+      creator.writeToFile(_generalDataDtoMobile, _plus);
+      String _transactionDataDtoMobile = this.transactionDataDtoMobile();
+      String _transactionMobileDtoFilePath = this.projectInfo.getTransactionMobileDtoFilePath();
+      String _plus_1 = ((this.modelRoot + "/custom/") + _transactionMobileDtoFilePath);
+      creator.writeToFile(_transactionDataDtoMobile, _plus_1);
+    }
     this.contributeBuildProperties(creator);
     boolean _isCreateEclipseRuntimeLaunchConfig = this.projectInfo.isCreateEclipseRuntimeLaunchConfig();
     if (_isCreateEclipseRuntimeLaunchConfig) {
@@ -161,7 +179,13 @@ public class DtoServicesProjectContributor extends DefaultProjectFactoryContribu
     _builder.append("</artifactId>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t\t");
-    _builder.append("<version>0.0.1-SNAPSHOT</version>");
+    _builder.append("<version>");
+    String _pomProjectVersion = this.projectInfo.getPomProjectVersion();
+    _builder.append(_pomProjectVersion, "\t\t");
+    _builder.append("</version>");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t\t");
+    _builder.append("<relativePath>../../</relativePath>");
     _builder.newLine();
     _builder.append("\t");
     _builder.append("</parent>");
@@ -195,5 +219,13 @@ public class DtoServicesProjectContributor extends DefaultProjectFactoryContribu
     _builder.newLine();
     _builder.newLine();
     return this.writeToFile(_builder, fileWriter, "pom.xml");
+  }
+  
+  private String generalDataDtoMobile() {
+    return FileUtil.readFile("data/dto/MobileGeneralCarstore.dtos-template");
+  }
+  
+  private String transactionDataDtoMobile() {
+    return FileUtil.readFile("data/dto/MobileTransactionCarstore.dtos-template");
   }
 }

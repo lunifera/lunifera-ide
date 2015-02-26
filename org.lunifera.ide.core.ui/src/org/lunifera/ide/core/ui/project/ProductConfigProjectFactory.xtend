@@ -11,11 +11,8 @@
  *******************************************************************************/
 package org.lunifera.ide.core.ui.project
 
-import java.util.ArrayList
-import java.util.List
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.xtext.ui.util.ProjectFactory
@@ -28,54 +25,11 @@ import org.eclipse.xtext.ui.util.ProjectFactory
  * @author Dennis Huebner - Initial contribution and API
  * @since 2.3
  */
-class FeatureProjectFactory extends ProjectFactory {
-
-	static String BUILD_PROPS_FILE_NAME = "build.properties";
-
-	List<String> containedBundles = new ArrayList()
-	List<String> includedFeatures = new ArrayList()
-	String mainCategoryName
-
-	String featureLabel
-
-	def void setFeatureLabel(String label) {
-		featureLabel = label
-	}
-	
-	/**
-	 * Adds a new plugin entry
-	 */
-	def FeatureProjectFactory addBundle(String bundleId) {
-		containedBundles.add(bundleId);
-		return this;
-	}
-
-	/**
-	 * Adds a new included feature entry
-	 */
-	def FeatureProjectFactory addFeature(String featureId) {
-		includedFeatures.add(featureId);
-		return this;
-	}
-
-	/**
-	 * @param mainCategoryName If not null or empty a category.xml will be created 
-	 */
-	def FeatureProjectFactory withCategoryFile(String mainCategoryName) {
-		this.mainCategoryName = mainCategoryName
-		return this;
-	}
+class ProductConfigProjectFactory extends ProjectFactory {
 
 	@Override
 	override protected void enhanceProject(IProject project, SubMonitor subMonitor, Shell shell) throws CoreException {
 		super.enhanceProject(project, subMonitor, shell);
-		createBuildProperties(project, subMonitor.newChild(1));
-	}
-
-	def private void createBuildProperties(IProject project, IProgressMonitor monitor) {
-		'''
-			bin.includes =�MANIFEST_FILENAME�
-		'''.writeToFile(BUILD_PROPS_FILE_NAME, project, monitor);
 	}
 
 }

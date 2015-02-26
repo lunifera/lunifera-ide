@@ -11,6 +11,9 @@
  *******************************************************************************/
 package org.lunifera.ide.core.ui.project
 
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 import org.eclipse.core.resources.IProject
 
 class EntityProjectContributor extends DefaultProjectFactoryContributor {
@@ -26,13 +29,18 @@ class EntityProjectContributor extends DefaultProjectFactoryContributor {
 	def void setSourceRoot(String sourceRoot) {
 		this.sourceRoot = sourceRoot
 	}
-	
+
 	def void setModelRoot(String modelRoot) {
 		this.modelRoot = modelRoot
 	}
 
 	override contributeFiles(IProject project, IFileCreator creator) {
-		creator.writeToFile(entity, modelRoot + "/" + projectInfo.entityFilePath)
+		if (projectInfo.isCarstoreDemoProject) {
+			creator.writeToFile(masterDataEntity(), modelRoot + "/" + projectInfo.generalEntityFilePath)
+			creator.writeToFile(transactionDataEntity(), modelRoot + "/" + projectInfo.transactionEntityFilePath)
+		}
+
+		contributePreferences(creator)
 		contributeBuildProperties(creator)
 		if (projectInfo.createEclipseRuntimeLaunchConfig) {
 			creator.writeToFile(launchConfig, ".launch/Launch Runtime Eclipse.launch")
@@ -40,39 +48,51 @@ class EntityProjectContributor extends DefaultProjectFactoryContributor {
 		contributePom(creator)
 		contributePersistenceXML(creator)
 	}
-	
+
 	def private contributeBuildProperties(IFileCreator fileWriter) {
 		'''
-		source.. = src/,\
-				src-gen/,\
-				models/
-		bin.includes = META-INF/,\
-				.,
+			source.. = src/,\
+					src-gen/,\
+					models/
+			bin.includes = META-INF/,\
+					.,
 		'''.writeToFile(fileWriter, "build.properties")
 	}
-	
-	def private entity() {
+
+	def private contributePreferences(IFileCreator fileWriter) {
 		'''
-		package «projectInfo.entityProjectName» {
-			
-			/**
-			 * The mapped superclass providing an UUID.
-			 */
-			mapped superclass BaseClass {
-				uuid String id;
-			}
-			
-			/**
-			 * The car entity
-			 */
-			entity Car extends BaseClass {
-				var String name;
-			}
-			
-		}
-		'''
+			autobuilding=true
+			eclipse.preferences.version=1
+			is_project_specific=true
+			outlet.DEFAULT_OUTPUT.cleanDirectory=false
+			outlet.DEFAULT_OUTPUT.cleanupDerived=true
+			outlet.DEFAULT_OUTPUT.createDirectory=true
+			outlet.DEFAULT_OUTPUT.derived=true
+			outlet.DEFAULT_OUTPUT.directory=./src-gen
+			outlet.DEFAULT_OUTPUT.hideLocalSyntheticVariables=true
+			outlet.DEFAULT_OUTPUT.installDslAsPrimarySource=false
+			outlet.DEFAULT_OUTPUT.keepLocalHistory=true
+			outlet.DEFAULT_OUTPUT.override=true
+			outlet.DTOs.cleanDirectory=false
+			outlet.DTOs.cleanupDerived=false
+			outlet.DTOs.createDirectory=true
+			outlet.DTOs.derived=false
+			outlet.DTOs.directory=../org.lunifera.samples.carstore.dtos/models
+			outlet.DTOs.hideLocalSyntheticVariables=true
+			outlet.DTOs.installDslAsPrimarySource=false
+			outlet.DTOs.keepLocalHistory=true
+			outlet.DTOs.override=false
+		'''.writeToFile(fileWriter, "/.settings/org.lunifera.dsl.entity.xtext.EntityGrammar.prefs")
 	}
-	
+
+	def private masterDataEntity() {
+		return FileUtil.readFile("data/entity/GeneralCarstore.entitymodel-template")
+	}
+
+	def private transactionDataEntity() {
+		return FileUtil.readFile("data/entity/TransactionCarstore.entitymodel-template")
+	}
+
 	def private contributePersistenceXML(IFileCreator fileWriter) {
 		'''
 			<?xml version="1.0" encoding="UTF-8"?>
@@ -147,25 +167,26 @@ class EntityProjectContributor extends DefaultProjectFactoryContributor {
 			</launchConfiguration>
 		'''
 	}
-	
+
 	def private contributePom(IFileCreator fileWriter) {
 		'''
-		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-			<modelVersion>4.0.0</modelVersion>
-			<parent>
-				<groupId>«projectInfo.projectName»</groupId>
-				<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
-			</parent>
+			<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+				<modelVersion>4.0.0</modelVersion>
+				<parent>
+					<groupId>«projectInfo.projectName»</groupId>
+					<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
+					<version>«projectInfo.pomProjectVersion»</version>
+					<relativePath>../../</relativePath>
+				</parent>
+				
+				<artifactId>«projectInfo.entityProjectName»</artifactId>
+				<packaging>eclipse-plugin</packaging>
+				
+				<name>JPA entities for «projectInfo.applicationName»</name>
+				<description>JPA entities for «projectInfo.applicationName»</description>
+			</project>
 			
-			<artifactId>«projectInfo.entityProjectName»</artifactId>
-			<packaging>eclipse-plugin</packaging>
-			
-			<name>JPA entities for «projectInfo.applicationName»</name>
-			<description>JPA entities for «projectInfo.applicationName»</description>
-		</project>
-
 		'''.writeToFile(fileWriter, "pom.xml")
 	}
 

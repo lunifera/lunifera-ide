@@ -63,10 +63,20 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 			XtextProjectHelper.NATURE_ID, LuniferaNature.NATURE_ID,
 			"org.eclipse.m2e.core.maven2Nature" }; //$NON-NLS-1$
 
-	protected static final String[] UI_PROJECT_NATURES = new String[] {
+	protected static final String[] UI_APPLICATION_PROJECT_NATURES = new String[] {
 			JavaCore.NATURE_ID,
 			"org.eclipse.pde.PluginNature",//$NON-NLS-1$
 			XtextProjectHelper.NATURE_ID, LuniferaNature.NATURE_ID,
+			"org.eclipse.m2e.core.maven2Nature" };//$NON-NLS-1$
+
+	protected static final String[] UI_MOBILE_PROJECT_NATURES = new String[] {
+			JavaCore.NATURE_ID,
+			"org.eclipse.pde.PluginNature",//$NON-NLS-1$
+			XtextProjectHelper.NATURE_ID, LuniferaNature.NATURE_ID,
+			"org.eclipse.m2e.core.maven2Nature" };//$NON-NLS-1$
+
+	protected static final String[] BOOTSTRAP_PROJECT_NATURES = new String[] {
+			JavaCore.NATURE_ID, "org.eclipse.pde.PluginNature",//$NON-NLS-1$
 			"org.eclipse.m2e.core.maven2Nature" };//$NON-NLS-1$
 
 	protected static final String[] AGGREGATOR_PROJECT_NATURES = new String[] { "org.eclipse.m2e.core.maven2Nature" };//$NON-NLS-1$
@@ -92,11 +102,13 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 			.getLogger(LuniferaProjectCreator.class);
 
 	@Inject
-	private Provider<BundleProjectFactory> projectFactoryProvider;
+	private Provider<BundleProjectFactory> bundleFactoryProvider;
 	@Inject
 	private Provider<FeatureProjectFactory> featureProjFactoryProvider;
 	@Inject
 	private Provider<P2ProjectFactory> p2ProjFactoryProvider;
+	@Inject
+	private Provider<ProductConfigProjectFactory> productConfigProjFactoryProvider;
 
 	protected LuniferaProjectInfo getLuniferaProjectInfo() {
 		return (LuniferaProjectInfo) getProjectInfo();
@@ -110,9 +122,11 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 				getCreateModelProjectMessage(), getMonitorTicks());
 
 		createAggregatorProject(subMonitor.newChild(1));
+		createBootstrapProject(subMonitor.newChild(1));
 		IProject project = createEntityProject(subMonitor.newChild(1));
 		createDtoServicesProject(subMonitor.newChild(1));
-		createUiProject(subMonitor.newChild(1));
+		createUiApplicationProject(subMonitor.newChild(1));
+		createUiMobileProject(subMonitor.newChild(1));
 
 		if (getLuniferaProjectInfo().isCreateTestProject()) {
 			createTestProject(subMonitor.newChild(1));
@@ -121,10 +135,11 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 			createFeatureProject(subMonitor.newChild(1));
 		}
 
+		createProductConfigProject(subMonitor.newChild(1));
 		createP2Project(subMonitor.newChild(1));
 
 		IFile entityModelFile = project.getFile(getModelFolderName() + "/"
-				+ getLuniferaProjectInfo().getEntityFilePath());
+				+ getLuniferaProjectInfo().getGeneralEntityFilePath());
 		BasicNewResourceWizard.selectAndReveal(entityModelFile, PlatformUI
 				.getWorkbench().getActiveWorkbenchWindow());
 		setResult(entityModelFile);
@@ -142,7 +157,7 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 
 	@Override
 	protected BundleProjectFactory createProjectFactory() {
-		return projectFactoryProvider.get();
+		return bundleFactoryProvider.get();
 	}
 
 	protected FeatureProjectFactory createFeatureFactory() {
@@ -151,6 +166,10 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 
 	protected P2ProjectFactory createP2Factory() {
 		return p2ProjFactoryProvider.get();
+	}
+
+	protected ProductConfigProjectFactory createProductConfigFactory() {
+		return productConfigProjFactoryProvider.get();
 	}
 
 	@Override
@@ -165,10 +184,17 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		return factory.createProject(monitor, null);
 	}
 
-	protected IProject createUiProject(final IProgressMonitor monitor)
+	protected IProject createUiApplicationProject(final IProgressMonitor monitor)
 			throws CoreException {
 		BundleProjectFactory factory = createProjectFactory();
-		configureUiProjectFactory(factory);
+		configureUiApplicationProjectFactory(factory);
+		return factory.createProject(monitor, null);
+	}
+
+	protected IProject createUiMobileProject(final IProgressMonitor monitor)
+			throws CoreException {
+		BundleProjectFactory factory = createProjectFactory();
+		configureUiMobileProjectFactory(factory);
 		return factory.createProject(monitor, null);
 	}
 
@@ -177,6 +203,7 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		configureProjectFactory(factory);
 		factory.addFolders(singletonList(MODEL_ROOT));
 		List<String> requiredBundles = getDtoServicesProjectRequiredBundles();
+		factory.setVersion(getLuniferaProjectInfo().getBundleProjectVersion());
 		factory.setProjectName(getLuniferaProjectInfo()
 				.getDtoServicesProjectName());
 		factory.addProjectNatures(getDtoServicesProjectNatures());
@@ -185,25 +212,50 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		factory.setLocation(getLuniferaProjectInfo()
 				.getDtoServicesProjectLocation());
 
-		factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
-				.getDtoPackageName()));
-		factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
-				.getDtoMapperPackageName()));
-		factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
-				.getServicesPackageName()));
+		// factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
+		// .getDtoPackageName()));
+		// factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
+		// .getDtoMapperPackageName()));
+		// factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
+		// .getServicesPackageName()));
+
+		if (getLuniferaProjectInfo().isCarstoreDemoProject()) {
+			factory.addExportedPackages(getLuniferaProjectInfo()
+					.getDtoProjectExportedPackages());
+		}
+
 		factory.addContributor(createDtoServiceProjectContributor());
 	}
 
-	protected void configureUiProjectFactory(BundleProjectFactory factory) {
+	protected void configureUiApplicationProjectFactory(
+			BundleProjectFactory factory) {
 		configureProjectFactory(factory);
 		factory.addFolders(singletonList(MODEL_ROOT));
-		List<String> requiredBundles = getUiProjectRequiredBundles();
-		factory.setProjectName(getLuniferaProjectInfo().getUiProjectName());
-		factory.addProjectNatures(getUiServicesProjectNatures());
+		List<String> requiredBundles = getUiApplicationProjectRequiredBundles();
+		factory.setProjectName(getLuniferaProjectInfo()
+				.getUiApplicationProjectName());
+		factory.setVersion(getLuniferaProjectInfo().getBundleProjectVersion());
+		factory.addProjectNatures(getUiApplicationProjectNatures());
 		factory.addRequiredBundles(requiredBundles);
 		factory.setProjectDefaultCharset(Charsets.UTF_8.name());
-		factory.setLocation(getLuniferaProjectInfo().getUiProjectLocation());
-		factory.addContributor(createUiProjectContributor());
+		factory.setLocation(getLuniferaProjectInfo()
+				.getUiApplicationProjectLocation());
+		factory.addContributor(createUiApplicationProjectContributor());
+	}
+
+	protected void configureUiMobileProjectFactory(BundleProjectFactory factory) {
+		configureProjectFactory(factory);
+		factory.addFolders(singletonList(MODEL_ROOT));
+		List<String> requiredBundles = getUiMobileProjectRequiredBundles();
+		factory.setProjectName(getLuniferaProjectInfo()
+				.getUiMobileProjectName());
+		factory.setVersion(getLuniferaProjectInfo().getBundleProjectVersion());
+		factory.addProjectNatures(getUiMobileProjectNatures());
+		factory.addRequiredBundles(requiredBundles);
+		factory.setProjectDefaultCharset(Charsets.UTF_8.name());
+		factory.setLocation(getLuniferaProjectInfo()
+				.getUiMobileProjectLocation());
+		factory.addContributor(createUiMobileProjectContributor());
 	}
 
 	protected void configureAggregatorProjectFactory(
@@ -235,7 +287,22 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		return requiredBundles;
 	}
 
-	protected List<String> getUiProjectRequiredBundles() {
+	protected List<String> getUiApplicationProjectRequiredBundles() {
+		List<String> requiredBundles = Lists.newArrayList(
+				"org.lunifera.ecview.core.common;bundle-version=\"0.7.3\"", //$NON-NLS-1$
+				"org.lunifera.dsl.datatype.lib;bundle-version=\"0.7.3\"", //$NON-NLS-1$
+				"org.lunifera.dsl.dto.lib;bundle-version=\"0.7.3\"", //$NON-NLS-1$
+				"com.google.guava;bundle-version=\"15.0.0\"", //$NON-NLS-1$
+				"org.eclipse.xtext.xbase.lib;bundle-version=\"2.6.2\"", //$NON-NLS-1$
+				"javax.persistence;bundle-version=\"2.1.0\"", //$NON-NLS-1$
+				"org.lunifera.runtime.common;bundle-version=\"0.7.5\"", //$NON-NLS-1$
+				getLuniferaProjectInfo().getEntityProjectName(), //$NON-NLS-1$
+				getLuniferaProjectInfo().getDtoServicesProjectName(), //$NON-NLS-1$
+				"org.eclipse.xtend.lib;bundle-version=\"2.6.2\""); //$NON-NLS-1$
+		return requiredBundles;
+	}
+
+	protected List<String> getUiMobileProjectRequiredBundles() {
 		List<String> requiredBundles = Lists.newArrayList(
 				"org.lunifera.ecview.core.common;bundle-version=\"0.7.3\"", //$NON-NLS-1$
 				"org.lunifera.dsl.datatype.lib;bundle-version=\"0.7.3\"", //$NON-NLS-1$
@@ -262,8 +329,12 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		return DTO_SERVICES_PROJECT_NATURES;
 	}
 
-	protected String[] getUiServicesProjectNatures() {
-		return UI_PROJECT_NATURES;
+	protected String[] getUiApplicationProjectNatures() {
+		return UI_APPLICATION_PROJECT_NATURES;
+	}
+
+	protected String[] getUiMobileProjectNatures() {
+		return UI_MOBILE_PROJECT_NATURES;
 	}
 
 	protected IProject createAggregatorProject(final IProgressMonitor monitor)
@@ -289,6 +360,15 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		return result;
 	}
 
+	protected IProject createBootstrapProject(final IProgressMonitor monitor)
+			throws CoreException {
+		BundleProjectFactory factory = createProjectFactory();
+		configureBootstrapProjectFactory(factory);
+		IProject result = factory.createProject(monitor, null);
+
+		return result;
+	}
+
 	@SuppressWarnings("deprecation")
 	public IPreferenceStore getWritablePreferenceStore(IProject project) {
 		ProjectScope projectScope = new ProjectScope(project);
@@ -305,18 +385,38 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 				+ PreferenceConstants.SEPARATOR + preferenceName;
 	}
 
+	protected void configureBootstrapProjectFactory(BundleProjectFactory factory) {
+		configureProjectFactory(factory);
+		factory.setProjectName(getLuniferaProjectInfo()
+				.getBootstrapPackageName());
+		factory.setVersion(getLuniferaProjectInfo().getBundleProjectVersion());
+		factory.addProjectNatures(getBootstrapProjectNatures());
+		factory.addRequiredBundles(getBootstrapProjectRequiredBundles());
+		factory.setLocation(getLuniferaProjectInfo()
+				.getBootstrapProjectLocation());
+		factory.setProjectDefaultCharset(Charsets.UTF_8.name());
+		factory.addContributor(createBootstrapProjectContributor());
+		// factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
+		// .getEntityPackageName()));
+	}
+
 	protected void configureEntityProjectFactory(BundleProjectFactory factory) {
 		configureProjectFactory(factory);
 		factory.addFolders(singletonList(MODEL_ROOT));
 		List<String> requiredBundles = getEntityProjectRequiredBundles();
 		factory.setProjectName(getLuniferaProjectInfo().getEntityProjectName());
+		factory.setVersion(getLuniferaProjectInfo().getBundleProjectVersion());
 		factory.addProjectNatures(getEntityProjectNatures());
 		factory.addRequiredBundles(requiredBundles);
 		factory.setLocation(getLuniferaProjectInfo().getEntityProjectLocation());
 		factory.setProjectDefaultCharset(Charsets.UTF_8.name());
 		factory.addContributor(createEntityProjectContributor());
-		factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
-				.getEntityPackageName()));
+		// factory.addExportedPackages(singletonList(getLuniferaProjectInfo()
+		// .getEntityPackageName()));
+		if (getLuniferaProjectInfo().isCarstoreDemoProject()) {
+			factory.addExportedPackages(getLuniferaProjectInfo()
+					.getEntityProjectExportedPackages());
+		}
 	}
 
 	/*
@@ -347,8 +447,16 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		return requiredBundles;
 	}
 
+	protected List<String> getBootstrapProjectRequiredBundles() {
+		return Collections.emptyList();
+	}
+
 	protected String[] getEntityProjectNatures() {
 		return ENTITY_PROJECT_NATURES;
+	}
+
+	protected String[] getBootstrapProjectNatures() {
+		return BOOTSTRAP_PROJECT_NATURES;
 	}
 
 	@Override
@@ -424,11 +532,32 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		factory.addContributor(createP2ProjectContributor());
 	}
 
+	protected IProject createProductConfigProject(SubMonitor monitor)
+			throws CoreException {
+		ProductConfigProjectFactory factory = createProductConfigFactory();
+		configureProductConfigProjectFactory(factory);
+		return factory.createProject(monitor, null);
+	}
+
+	protected void configureProductConfigProjectFactory(
+			ProductConfigProjectFactory factory) {
+		factory.setProjectName(getLuniferaProjectInfo()
+				.getProductConfigProjectName());
+		factory.setLocation(getLuniferaProjectInfo()
+				.getProductConfigProjectLocation());
+		factory.addProjectNatures("org.eclipse.m2e.core.maven2Nature");
+		factory.addBuilderIds("org.eclipse.m2e.core.maven2Builder");
+		factory.addWorkingSets(Arrays.asList(getLuniferaProjectInfo()
+				.getWorkingSets()));
+		factory.addContributor(createProductConfigProjectContributor());
+	}
+
 	protected void configureTestProjectFactory(BundleProjectFactory factory) {
 		configureProjectFactory(factory);
 		factory.addFolders(singletonList(XTEND_GEN_ROOT));
 		List<String> requiredBundles = getTestProjectRequiredBundles();
 		factory.setProjectName(getLuniferaProjectInfo().getTestProjectName());
+		factory.setVersion(getLuniferaProjectInfo().getBundleProjectVersion());
 		factory.addProjectNatures(getTestProjectNatures());
 		factory.addRequiredBundles(requiredBundles);
 		factory.addImportedPackages(getTestProjectImportedPackages());
@@ -483,6 +612,13 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		return dslProjectContributor;
 	}
 
+	protected IProjectFactoryContributor createBootstrapProjectContributor() {
+		BootstrapProjectContributor contributor = new BootstrapProjectContributor(
+				getLuniferaProjectInfo());
+		contributor.setSourceRoot(SRC_ROOT);
+		return contributor;
+	}
+
 	protected IProjectFactoryContributor createFeatureProjectContributor() {
 		FeatureProjectContributor dslProjectContributor = new FeatureProjectContributor(
 				getLuniferaProjectInfo());
@@ -493,11 +629,19 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		DtoServicesProjectContributor dslProjectContributor = new DtoServicesProjectContributor(
 				getLuniferaProjectInfo());
 		dslProjectContributor.setSourceRoot(SRC_ROOT);
+		dslProjectContributor.setModelRoot(MODEL_ROOT);
 		return dslProjectContributor;
 	}
 
-	protected IProjectFactoryContributor createUiProjectContributor() {
-		UiProjectContributor dslProjectContributor = new UiProjectContributor(
+	protected IProjectFactoryContributor createUiApplicationProjectContributor() {
+		UiApplicationProjectContributor dslProjectContributor = new UiApplicationProjectContributor(
+				getLuniferaProjectInfo());
+		dslProjectContributor.setSourceRoot(SRC_ROOT);
+		return dslProjectContributor;
+	}
+
+	protected IProjectFactoryContributor createUiMobileProjectContributor() {
+		UiMobileProjectContributor dslProjectContributor = new UiMobileProjectContributor(
 				getLuniferaProjectInfo());
 		dslProjectContributor.setSourceRoot(SRC_ROOT);
 		return dslProjectContributor;
@@ -513,6 +657,12 @@ public class LuniferaProjectCreator extends AbstractProjectCreator {
 		P2ProjectContributor dslProjectContributor = new P2ProjectContributor(
 				getLuniferaProjectInfo());
 		return dslProjectContributor;
+	}
+
+	protected IProjectFactoryContributor createProductConfigProjectContributor() {
+		ProductConfigProjectContributor contributor = new ProductConfigProjectContributor(
+				getLuniferaProjectInfo());
+		return contributor;
 	}
 
 }

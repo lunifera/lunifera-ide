@@ -15,6 +15,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.ui.util.IProjectFactoryContributor;
 import org.lunifera.ide.core.ui.project.DefaultProjectFactoryContributor;
+import org.lunifera.ide.core.ui.project.FileUtil;
 import org.lunifera.ide.core.ui.project.LuniferaProjectInfo;
 
 /**
@@ -31,10 +32,16 @@ public class AggregatorProjectContributor extends DefaultProjectFactoryContribut
   }
   
   public void contributeFiles(final IProject project, final IProjectFactoryContributor.IFileCreator fileWriter) {
+    String _targetPlatformFile = this.targetPlatformFile();
+    fileWriter.writeToFile(_targetPlatformFile, "/setup/targetplatform.target");
     this.contributeMarker(fileWriter);
     this.contributeBuildProperties(fileWriter);
     this.contributeLaunchConfig(fileWriter);
     this.contributePom(fileWriter);
+  }
+  
+  private String targetPlatformFile() {
+    return FileUtil.readFile("data/targetplatform.target-template");
   }
   
   private IFile contributeMarker(final IProjectFactoryContributor.IFileCreator fileWriter) {
@@ -58,6 +65,52 @@ public class AggregatorProjectContributor extends DefaultProjectFactoryContribut
     _builder.append(".");
     _builder.newLine();
     return this.writeToFile(_builder, fileWriter, "build.properties");
+  }
+  
+  private IFile contributeTargetDefinition(final IProjectFactoryContributor.IFileCreator fileWriter) {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+    _builder.newLine();
+    _builder.append("<?pde version=\"3.8\"?>");
+    _builder.newLine();
+    _builder.append("<target name=\"Carstore Targetdefinition\" sequenceNumber=\"14\">");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("<locations>");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.append("<location includeAllPlatforms=\"false\" includeConfigurePhase=\"true\" includeMode=\"slicer\" includeSource=\"true\" type=\"InstallableUnit\">");
+    _builder.newLine();
+    _builder.append("\t\t\t");
+    _builder.append("<unit id=\"org.lunifera.runtime.feature.allinone.feature.group\" version=\"0.8.1.201501301423\"/>");
+    _builder.newLine();
+    _builder.append("\t\t\t");
+    _builder.append("<unit id=\"org.lunifera.runtime.feature.allinone.source.feature.group\" version=\"0.8.1.201501301423\"/>");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.append("<repository location=\"http://lun.lunifera.org/downloads/p2/lunifera/luna/latest/\"/>");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.append("</location>");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("</locations>");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("<environment>");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.append("<arch>x86_64</arch>");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.append("<nl>de_AT</nl>");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("</environment>");
+    _builder.newLine();
+    _builder.append("</target>");
+    _builder.newLine();
+    return this.writeToFile(_builder, fileWriter, "setup/targetplatform.target");
   }
   
   private IFile contributeLaunchConfig(final IProjectFactoryContributor.IFileCreator fileWriter) {
@@ -134,8 +187,11 @@ public class AggregatorProjectContributor extends DefaultProjectFactoryContribut
     _builder.append("</artifactId>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t");
-    _builder.append("<version>0.0.1-SNAPSHOT</version>");
-    _builder.newLine();
+    _builder.append("<version>");
+    String _pomProjectVersion = this.projectInfo.getPomProjectVersion();
+    _builder.append(_pomProjectVersion, "\t");
+    _builder.append("</version>");
+    _builder.newLineIfNotEmpty();
     _builder.append("\t");
     _builder.append("<packaging>pom</packaging>");
     _builder.newLine();
@@ -144,7 +200,7 @@ public class AggregatorProjectContributor extends DefaultProjectFactoryContribut
     _builder.append("<properties>");
     _builder.newLine();
     _builder.append("\t\t");
-    _builder.append("<license.copyrightOwners>My Company</license.copyrightOwners>");
+    _builder.append("<license.copyrightOwners>Lunifera GmbH</license.copyrightOwners>");
     _builder.newLine();
     _builder.append("\t\t");
     _builder.append("<lunifera.gitrepo.name>sample-");
@@ -163,33 +219,45 @@ public class AggregatorProjectContributor extends DefaultProjectFactoryContribut
     _builder.append("<modules>");
     _builder.newLine();
     _builder.append("\t\t");
-    _builder.append("<module>");
+    _builder.append("<module>bundles/");
+    String _bootstrapProjectName = this.projectInfo.getBootstrapProjectName();
+    _builder.append(_bootstrapProjectName, "\t\t");
+    _builder.append("</module>");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t\t");
+    _builder.append("<module>bundles/");
     String _dtoServicesProjectName = this.projectInfo.getDtoServicesProjectName();
     _builder.append(_dtoServicesProjectName, "\t\t");
     _builder.append("</module>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t\t");
-    _builder.append("<module>");
+    _builder.append("<module>bundles/");
     String _entityProjectName = this.projectInfo.getEntityProjectName();
     _builder.append(_entityProjectName, "\t\t");
     _builder.append("</module>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t\t");
-    _builder.append("<module>");
+    _builder.append("<module>bundles/");
     String _testProjectName = this.projectInfo.getTestProjectName();
     _builder.append(_testProjectName, "\t\t");
     _builder.append("</module>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t\t");
-    _builder.append("<module>");
-    String _uiProjectName = this.projectInfo.getUiProjectName();
-    _builder.append(_uiProjectName, "\t\t");
+    _builder.append("<module>bundles/");
+    String _uiApplicationProjectName = this.projectInfo.getUiApplicationProjectName();
+    _builder.append(_uiApplicationProjectName, "\t\t");
+    _builder.append("</module>");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t\t");
+    _builder.append("<module>bundles/");
+    String _uiMobileProjectName = this.projectInfo.getUiMobileProjectName();
+    _builder.append(_uiMobileProjectName, "\t\t");
     _builder.append("</module>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t\t");
     _builder.newLine();
     _builder.append("\t\t");
-    _builder.append("<module>");
+    _builder.append("<module>features/");
     String _featureProjectName = this.projectInfo.getFeatureProjectName();
     _builder.append(_featureProjectName, "\t\t");
     _builder.append("</module>");
@@ -197,9 +265,15 @@ public class AggregatorProjectContributor extends DefaultProjectFactoryContribut
     _builder.append("\t\t");
     _builder.newLine();
     _builder.append("\t\t");
-    _builder.append("<module>");
+    _builder.append("<module>releng/");
     String _p2ProjectName = this.projectInfo.getP2ProjectName();
     _builder.append(_p2ProjectName, "\t\t");
+    _builder.append("</module>");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t\t");
+    _builder.append("<module>releng/");
+    String _productConfigProjectName = this.projectInfo.getProductConfigProjectName();
+    _builder.append(_productConfigProjectName, "\t\t");
     _builder.append("</module>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t");

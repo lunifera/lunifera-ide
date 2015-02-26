@@ -18,12 +18,12 @@ import org.lunifera.ide.core.ui.project.DefaultProjectFactoryContributor;
 import org.lunifera.ide.core.ui.project.LuniferaProjectInfo;
 
 @SuppressWarnings("all")
-public class UiProjectContributor extends DefaultProjectFactoryContributor {
+public class UiMobileProjectContributor extends DefaultProjectFactoryContributor {
   private LuniferaProjectInfo projectInfo;
   
   private String sourceRoot;
   
-  public UiProjectContributor(final LuniferaProjectInfo projectInfo) {
+  public UiMobileProjectContributor(final LuniferaProjectInfo projectInfo) {
     this.projectInfo = projectInfo;
   }
   
@@ -158,7 +158,13 @@ public class UiProjectContributor extends DefaultProjectFactoryContributor {
     _builder.append("</artifactId>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t\t");
-    _builder.append("<version>0.0.1-SNAPSHOT</version>");
+    _builder.append("<version>");
+    String _pomProjectVersion = this.projectInfo.getPomProjectVersion();
+    _builder.append(_pomProjectVersion, "\t\t");
+    _builder.append("</version>");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t\t");
+    _builder.append("<relativePath>../../</relativePath>");
     _builder.newLine();
     _builder.append("\t");
     _builder.append("</parent>");
@@ -167,8 +173,8 @@ public class UiProjectContributor extends DefaultProjectFactoryContributor {
     _builder.newLine();
     _builder.append("\t");
     _builder.append("<artifactId>");
-    String _uiProjectName = this.projectInfo.getUiProjectName();
-    _builder.append(_uiProjectName, "\t");
+    String _uiMobileProjectName = this.projectInfo.getUiMobileProjectName();
+    _builder.append(_uiMobileProjectName, "\t");
     _builder.append("</artifactId>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t");
@@ -177,13 +183,13 @@ public class UiProjectContributor extends DefaultProjectFactoryContributor {
     _builder.append("\t");
     _builder.newLine();
     _builder.append("\t");
-    _builder.append("<name>UserInterface for ");
+    _builder.append("<name>Mobile UserInterface for ");
     String _applicationName = this.projectInfo.getApplicationName();
     _builder.append(_applicationName, "\t");
     _builder.append("</name>");
     _builder.newLineIfNotEmpty();
     _builder.append("\t");
-    _builder.append("<description>UserInterface for ");
+    _builder.append("<description>Mobile UserInterface for ");
     String _applicationName_1 = this.projectInfo.getApplicationName();
     _builder.append(_applicationName_1, "\t");
     _builder.append("</description>");

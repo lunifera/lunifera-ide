@@ -1,0 +1,33 @@
+package org.lunifera.samples.carstore.dtos.general.mobile {
+
+/* Imports the required artifacts */
+
+// import entities
+	import org.lunifera.samples.carstore.dtos.general.NumberedWithDescriptionDto;
+	import org.lunifera.samples.carstore.entities.general.Item;
+	import org.lunifera.samples.carstore.entities.general.Accessory;
+	import org.lunifera.samples.carstore.entities.general.Car;
+	import org.lunifera.samples.carstore.entities.general.Pickup;
+	import org.lunifera.samples.carstore.entities.general.Convertible;
+
+	/*
+	 * Mobile dtos do not provide all properties. So they are redefined here.
+	 */
+	abstract dto ItemMobileDto extends NumberedWithDescriptionDto wraps Item { }
+
+	dto AccessoryMobileDto extends ItemMobileDto wraps Accessory { }
+
+	dto CarMobileDto extends ItemMobileDto wraps Car {
+			inherit var axes;
+			inherit var weight;
+	}
+
+	dto PickupMobileDto extends CarMobileDto wraps Pickup {
+			var String customProperty;
+	}
+
+	dto ConvertibleMobileDto extends CarMobileDto wraps Convertible {
+			inherit var color;
+	}
+
+}

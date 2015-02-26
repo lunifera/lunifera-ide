@@ -70,7 +70,8 @@ class TestProjectContributor extends DefaultProjectFactoryContributor {
 			<parent>
 				<groupId>«projectInfo.projectName»</groupId>
 				<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>«projectInfo.pomProjectVersion»</version>
+				<relativePath>../../</relativePath>
 			</parent>
 			
 			<artifactId>«projectInfo.testProjectName»</artifactId>

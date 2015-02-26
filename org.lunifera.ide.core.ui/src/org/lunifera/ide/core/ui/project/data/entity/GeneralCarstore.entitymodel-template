@@ -1,0 +1,107 @@
+package org.lunifera.samples.carstore.entities.general {
+
+	/**
+	 * The mapped superclass providing an UUID.
+	 */
+	mapped superclass Base {
+		uuid String id;
+	}
+
+	abstract entity NumberedWithDescription extends Base {
+		var String number;
+		var String description;
+	}
+
+	entity UnitOfMeasure extends NumberedWithDescription {
+		var SiType siType;
+		var UOMFamily family;
+	}
+  
+	entity PaymentTerm extends NumberedWithDescription { }
+
+	abstract entity Item extends NumberedWithDescription { }
+
+	entity Accessory extends Item { }
+
+	entity Car extends Item {
+		var int axes;
+		var Weight weight;
+		var Price price;
+		ref cascade ConfigDetailDefinition [*] configDetails opposite car;
+	}
+
+	entity Pickup extends Car {
+		var Length loadingAreaWidth;
+		var Length loadingAreaLength;
+	}
+
+	entity Convertible extends Car {
+		var RoofType roofType;
+		var String color;
+	}
+
+	entity ConfigDetailDefinition extends NumberedWithDescription {
+		var Price price;
+		ref Car car opposite configDetails;
+	}
+
+	entity Currency extends NumberedWithDescription {
+		var String iso3Code;
+	}
+    
+	entity Customer extends Base {
+		var String number;
+		var String name;
+		ref PaymentTerm paymentTerms;
+		var Address deliveryAddress;
+		var Address invoiceAddress;
+	}
+
+	entity CarManufacturer extends Base {
+		var String number;
+		var String name;
+	}
+
+	// ..............
+	// Beans
+	// ..............
+
+	bean Address {
+		var String street;
+		var String postalCode;
+	}
+
+	bean Weight {
+		var float amount;
+
+	}
+
+	bean Length {
+		var float amount;
+
+	}
+
+	bean Quantity {
+		var float amount;
+
+	}
+
+	bean Price {
+		var float amount;
+
+	}
+
+	bean Amount extends Price { }
+
+	enum SiType {
+		METER,  KG,  LITER
+	}
+
+	enum UOMFamily {
+		WEIGHT,  LENGTH,  QUANTITY,  VOLUME
+	}
+
+	enum RoofType {
+		SOFT,  HARD
+	}
+}

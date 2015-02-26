@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 /**
  * @author Sebastian Zarnekow - Initial contribution and API
  */
+@SuppressWarnings("restriction")
 public class BundleProjectFactory extends JavaProjectFactory {
 
 	private static final Logger LOGGER = LoggerFactory
@@ -50,6 +51,7 @@ public class BundleProjectFactory extends JavaProjectFactory {
 	protected List<String> exportedPackages;
 	protected List<String> importedPackages;
 	protected String activatorClassName;
+	protected String version;
 
 	public BundleProjectFactory addRequiredBundles(List<String> requiredBundles) {
 		if (this.requiredBundles == null)
@@ -165,8 +167,8 @@ public class BundleProjectFactory extends JavaProjectFactory {
 				"Manifest-Version: 1.0\n");
 		content.append("Bundle-ManifestVersion: 2\n");
 		content.append("Bundle-Name: " + projectName + "\n");
-		content.append("Bundle-Vendor: My Company\n");
-		content.append("Bundle-Version: 0.0.1.qualifier\n");
+		content.append("Bundle-Vendor: Lunifera GmbH\n");
+		content.append(String.format("Bundle-Version: %s\n", version));
 		content.append("Bundle-SymbolicName: " + projectName
 				+ "; singleton:=true\n");
 		if (null != activatorClassName) {
@@ -178,7 +180,7 @@ public class BundleProjectFactory extends JavaProjectFactory {
 		addToContent(content, exportedPackages, "Export-Package");
 		addToContent(content, importedPackages, "Import-Package");
 
-		content.append("Bundle-RequiredExecutionEnvironment: J2SE-1.5\n");
+		content.append("Bundle-RequiredExecutionEnvironment: J2SE-1.7\n");
 
 		final IFolder metaInf = project.getFolder("META-INF");
 		SubMonitor subMonitor = SubMonitor.convert(progressMonitor, 2);
@@ -217,6 +219,10 @@ public class BundleProjectFactory extends JavaProjectFactory {
 	@Override
 	public BundleProjectFactory setProjectName(String projectName) {
 		return (BundleProjectFactory) super.setProjectName(projectName);
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
 	}
 
 	@Override

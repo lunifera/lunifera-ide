@@ -1,0 +1,23 @@
+package org.lunifera.samples.carstore.dtos.sales.mobile {
+
+	/* Imports the required artifacts */
+
+	// entities
+	import org.lunifera.samples.carstore.entities.sales.SalesOrderDetail;
+
+	// general dtos
+	import org.lunifera.samples.carstore.dtos.general.BaseDto;
+	import org.lunifera.samples.carstore.dtos.general.PaymentTermDto;
+
+	// mobile dtos
+	import org.lunifera.samples.carstore.dtos.general.mobile.ItemMobileDto;
+
+	dto SalesOrderDetailMobileDto extends BaseDto wraps SalesOrderDetail {
+		inherit var number;
+		inherit ref item mapto ItemMobileDto;
+		inherit ref paymentTerm mapto PaymentTermDto;
+		inherit var price;
+		inherit var quantity;
+		inherit var value;
+	}
+}

@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.lunifera.ide.core.ui.project;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.runtime.IPath;
@@ -39,6 +41,8 @@ public class LuniferaProjectInfo implements IProjectInfo {
 	private boolean createFeatureProject;
 	private WizardContribution wizardContribution;
 	private String applicationName;
+	private boolean carstoreDemoProject = true;
+	private String projectVersion = "0.0.1.qualifier";
 
 	public boolean isCreateEclipseRuntimeLaunchConfig() {
 		return createEclipseRuntimeLaunchConfig;
@@ -64,12 +68,32 @@ public class LuniferaProjectInfo implements IProjectInfo {
 		return encoding;
 	}
 
+	public String getBundleProjectVersion() {
+		return projectVersion;
+	}
+
+	public String getPomProjectVersion() {
+		return projectVersion.replace(".qualifier", "-SNAPSHOT");
+	}
+
+	public void setProjectVersion(String projectVersion) {
+		this.projectVersion = projectVersion;
+	}
+
 	public boolean isCreateTestProject() {
 		return createTestProject;
 	}
 
 	public void setCreateTestProject(boolean createTestProject) {
 		this.createTestProject = createTestProject;
+	}
+
+	public boolean isCarstoreDemoProject() {
+		return carstoreDemoProject;
+	}
+
+	public void setCarstoreDemoProject(boolean carstoreDemoProject) {
+		this.carstoreDemoProject = carstoreDemoProject;
 	}
 
 	public boolean isCreateFeatureProject() {
@@ -131,9 +155,13 @@ public class LuniferaProjectInfo implements IProjectInfo {
 	public String getFeatureProjectName() {
 		return getProjectName() + ".feature"; //$NON-NLS-1$;
 	}
-	
+
 	public String getP2ProjectName() {
 		return getProjectName() + ".p2"; //$NON-NLS-1$;
+	}
+
+	public String getProductConfigProjectName() {
+		return getProjectName() + ".product"; //$NON-NLS-1$;
 	}
 
 	public String getDtoServicesProjectName() {
@@ -152,12 +180,48 @@ public class LuniferaProjectInfo implements IProjectInfo {
 		return getDtoPackageName() + ".services";
 	}
 
-	public String getUiProjectName() {
-		return getProjectName() + ".ui"; //$NON-NLS-1$
+	public String getUiApplicationProjectName() {
+		return getProjectName() + ".ui.application"; //$NON-NLS-1$
+	}
+
+	public String getUiMobileProjectName() {
+		return getProjectName() + ".ui.mobile"; //$NON-NLS-1$
+	}
+
+	public String getBootstrapProjectName() {
+		return getProjectName() + ".bootstrap"; //$NON-NLS-1$
+	}
+
+	public String getBootstrapPackageName() {
+		return getBootstrapProjectName();
 	}
 
 	public String getBasePackagePath() {
 		return getBasePackage().replaceAll("\\.", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	public List<String> getDtoProjectExportedPackages() {
+		List<String> packages = new ArrayList<String>();
+		packages.add("org.lunifera.samples.carstore.dtos.general");
+		packages.add("org.lunifera.samples.carstore.dtos.general.mapper");
+		packages.add("org.lunifera.samples.carstore.dtos.general.mobile");
+		packages.add("org.lunifera.samples.carstore.dtos.general.mobile.mapper");
+		packages.add("org.lunifera.samples.carstore.dtos.general.mobile.services");
+		packages.add("org.lunifera.samples.carstore.dtos.general.services");
+		packages.add("org.lunifera.samples.carstore.dtos.sales");
+		packages.add("org.lunifera.samples.carstore.dtos.sales.mapper");
+		packages.add("org.lunifera.samples.carstore.dtos.sales.mobile");
+		packages.add("org.lunifera.samples.carstore.dtos.sales.mobile.mapper");
+		packages.add("org.lunifera.samples.carstore.dtos.sales.mobile.services");
+		packages.add("org.lunifera.samples.carstore.dtos.sales.services");
+		return packages;
+	}
+
+	public List<String> getEntityProjectExportedPackages() {
+		List<String> packages = new ArrayList<String>();
+		packages.add("org.lunifera.samples.carstore.entities.general");
+		packages.add("org.lunifera.samples.carstore.entities.sales");
+		return packages;
 	}
 
 	public String getBasePackage() {
@@ -169,6 +233,22 @@ public class LuniferaProjectInfo implements IProjectInfo {
 	public String getModelNameAbbreviation() {
 		String[] packageNames = modelName.split("\\."); //$NON-NLS-1$
 		return Strings.toFirstUpper(packageNames[packageNames.length - 1]);
+	}
+
+	public String getGeneralEntityModelName() {
+		return "General" + getModelNameAbbreviation();
+	}
+
+	public String getTransactionEntityModelName() {
+		return "Transaction" + getModelNameAbbreviation();
+	}
+
+	public String getGeneralMobileDtoModelName() {
+		return "MobileGeneral" + getModelNameAbbreviation();
+	}
+
+	public String getTransactionMobileDtoModelName() {
+		return "MobileTransaction" + getModelNameAbbreviation();
 	}
 
 	public String getNsURI() {
@@ -218,28 +298,48 @@ public class LuniferaProjectInfo implements IProjectInfo {
 	}
 
 	public IPath getEntityProjectLocation() {
-		return getAggregatorProjectLocation().append(getEntityProjectName());
+		return getAggregatorProjectLocation().append(
+				"bundles/" + getEntityProjectName());
 	}
 
 	public IPath getDtoServicesProjectLocation() {
 		return getAggregatorProjectLocation().append(
-				getDtoServicesProjectName());
+				"bundles/" + getDtoServicesProjectName());
 	}
 
-	public IPath getUiProjectLocation() {
-		return getAggregatorProjectLocation().append(getUiProjectName());
+	public IPath getUiApplicationProjectLocation() {
+		return getAggregatorProjectLocation().append(
+				"bundles/" + getUiApplicationProjectName());
+	}
+
+	public IPath getUiMobileProjectLocation() {
+		return getAggregatorProjectLocation().append(
+				"bundles/" + getUiMobileProjectName());
+	}
+
+	public IPath getBootstrapProjectLocation() {
+		return getAggregatorProjectLocation().append(
+				"bundles/" + getBootstrapProjectName());
 	}
 
 	public IPath getTestProjectLocation() {
-		return getAggregatorProjectLocation().append(getTestProjectName());
+		return getAggregatorProjectLocation().append(
+				"bundles/" + getTestProjectName());
 	}
 
 	public IPath getFeatureProjectLocation() {
-		return getAggregatorProjectLocation().append(getFeatureProjectName());
+		return getAggregatorProjectLocation().append(
+				"features/" + getFeatureProjectName());
 	}
-	
+
 	public IPath getP2ProjectLocation() {
-		return getAggregatorProjectLocation().append(getP2ProjectName());
+		return getAggregatorProjectLocation().append(
+				"releng/" + getP2ProjectName());
+	}
+
+	public IPath getProductConfigProjectLocation() {
+		return getAggregatorProjectLocation().append(
+				"releng/" + getProductConfigProjectName());
 	}
 
 	public IPath getAggregatorProjectLocation() {
@@ -254,11 +354,20 @@ public class LuniferaProjectInfo implements IProjectInfo {
 		return wizardContribution;
 	}
 
-	/**
-	 * @return Source Folder relative path to the Grammar file
-	 */
-	public String getEntityFilePath() {
-		return getModelNameAbbreviation() + ".entitymodel";
+	public String getGeneralEntityFilePath() {
+		return getGeneralEntityModelName() + ".entitymodel";
+	}
+
+	public String getTransactionEntityFilePath() {
+		return getTransactionEntityModelName() + ".entitymodel";
+	}
+
+	public String getGeneralMobileDtoFilePath() {
+		return getGeneralMobileDtoModelName() + ".dtos";
+	}
+
+	public String getTransactionMobileDtoFilePath() {
+		return getTransactionMobileDtoModelName() + ".dtos";
 	}
 
 }

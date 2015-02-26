@@ -13,7 +13,7 @@ package org.lunifera.ide.core.ui.project
 
 import org.eclipse.core.resources.IProject
 
-class UiProjectContributor extends DefaultProjectFactoryContributor {
+class UiMobileProjectContributor extends DefaultProjectFactoryContributor {
 	
 	LuniferaProjectInfo projectInfo
 	String sourceRoot
@@ -82,7 +82,7 @@ class UiProjectContributor extends DefaultProjectFactoryContributor {
 		</launchConfiguration>
 		'''
 	}
-	
+	 
 	def private contributePom(IFileCreator fileWriter) {
 		'''
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -91,14 +91,15 @@ class UiProjectContributor extends DefaultProjectFactoryContributor {
 			<parent>
 				<groupId>«projectInfo.projectName»</groupId>
 				<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>«projectInfo.pomProjectVersion»</version>
+				<relativePath>../../</relativePath>
 			</parent>
 			
-			<artifactId>«projectInfo.uiProjectName»</artifactId>
+			<artifactId>«projectInfo.uiMobileProjectName»</artifactId>
 			<packaging>eclipse-plugin</packaging>
 			
-			<name>UserInterface for «projectInfo.applicationName»</name>
-			<description>UserInterface for «projectInfo.applicationName»</description>
+			<name>Mobile UserInterface for «projectInfo.applicationName»</name>
+			<description>Mobile UserInterface for «projectInfo.applicationName»</description>
 		</project>
 		'''.writeToFile(fileWriter, "pom.xml")
 	}

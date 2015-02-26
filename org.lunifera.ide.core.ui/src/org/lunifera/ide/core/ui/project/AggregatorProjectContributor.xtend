@@ -27,10 +27,16 @@ class AggregatorProjectContributor extends DefaultProjectFactoryContributor {
 	}
 
 	override contributeFiles(IProject project, IFileCreator fileWriter) {
+		fileWriter.writeToFile(targetPlatformFile(), "/setup/targetplatform.target")
+		
 		contributeMarker(fileWriter)
 		contributeBuildProperties(fileWriter)
 		contributeLaunchConfig(fileWriter)
 		contributePom(fileWriter)
+	}
+	
+	def private targetPlatformFile() {
+		return FileUtil.readFile("data/targetplatform.target-template")
 	}
 	
 	def private contributeMarker(IFileCreator fileWriter) {
@@ -46,6 +52,26 @@ class AggregatorProjectContributor extends DefaultProjectFactoryContributor {
 			bin.includes = META-INF/,\
 			       .
 		'''.writeToFile(fileWriter, "build.properties")
+	}
+	
+	def private contributeTargetDefinition(IFileCreator fileWriter) {
+		'''
+			<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+			<?pde version="3.8"?>
+			<target name="Carstore Targetdefinition" sequenceNumber="14">
+				<locations>
+					<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+						<unit id="org.lunifera.runtime.feature.allinone.feature.group" version="0.8.1.201501301423"/>
+						<unit id="org.lunifera.runtime.feature.allinone.source.feature.group" version="0.8.1.201501301423"/>
+					<repository location="http://lun.lunifera.org/downloads/p2/lunifera/luna/latest/"/>
+					</location>
+				</locations>
+				<environment>
+					<arch>x86_64</arch>
+					<nl>de_AT</nl>
+				</environment>
+			</target>
+		'''.writeToFile(fileWriter, "setup/targetplatform.target")
 	}
 
 	def private contributeLaunchConfig(IFileCreator fileWriter) {
@@ -80,24 +106,27 @@ class AggregatorProjectContributor extends DefaultProjectFactoryContributor {
 			
 				<groupId>«projectInfo.projectName»</groupId>
 				<artifactId>«projectInfo.aggregatorProjectName»</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>«projectInfo.pomProjectVersion»</version>
 				<packaging>pom</packaging>
 			
 				<properties>
-					<license.copyrightOwners>My Company</license.copyrightOwners>
+					<license.copyrightOwners>Lunifera GmbH</license.copyrightOwners>
 					<lunifera.gitrepo.name>sample-«projectInfo.applicationName»</lunifera.gitrepo.name>
 					<lunifera.releng.version>0.12.3-SNAPSHOT</lunifera.releng.version>
 				</properties>
 			
 				<modules>
-					<module>«projectInfo.dtoServicesProjectName»</module>
-					<module>«projectInfo.entityProjectName»</module>
-					<module>«projectInfo.testProjectName»</module>
-					<module>«projectInfo.uiProjectName»</module>
+					<module>bundles/«projectInfo.bootstrapProjectName»</module>
+					<module>bundles/«projectInfo.dtoServicesProjectName»</module>
+					<module>bundles/«projectInfo.entityProjectName»</module>
+					<module>bundles/«projectInfo.testProjectName»</module>
+					<module>bundles/«projectInfo.uiApplicationProjectName»</module>
+					<module>bundles/«projectInfo.uiMobileProjectName»</module>
 					
-					<module>«projectInfo.featureProjectName»</module>
+					<module>features/«projectInfo.featureProjectName»</module>
 					
-					<module>«projectInfo.p2ProjectName»</module>
+					<module>releng/«projectInfo.p2ProjectName»</module>
+					<module>releng/«projectInfo.productConfigProjectName»</module>
 				</modules>
 			
 				<repositories>
