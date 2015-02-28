@@ -21,73 +21,12 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-server</artifactId>
-			<scope>provided</scope>
-			<version>${vaadin-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-client</artifactId>
-			<scope>provided</scope>
-			<version>${vaadin-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-client-compiled</artifactId>
-			<scope>provided</scope>
-			<version>${vaadin-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-shared</artifactId>
-			<scope>provided</scope>
-			<version>${vaadin-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-shared-deps</artifactId>
-			<scope>provided</scope>
-			<version>1.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-client-compiler</artifactId>
-			<scope>provided</scope>
-			<version>${vaadin-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-themes</artifactId>
-			<version>${vaadin-version}</version>
-		</dependency>
-		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
 		</dependency>
-		<dependency>
-			<groupId>com.vaadin.addon</groupId>
-			<artifactId>vaadin-touchkit-cval</artifactId>
-			<version>${vaadin-mobile-version}</version>
-		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>com.vaadin</groupId> -->
-		<!-- <artifactId>vaadin-testbench</artifactId> -->
-		<!-- <version>3.0.4</version> -->
-		<!-- <scope>test</scope> -->
-		<!-- </dependency> -->
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
 	</dependencies>
 
-	<build>
-		
-	</build>
 	<name>Lunifera IDE Core</name>
 	<description>Lunifera IDE Core</description>
 </project>

@@ -43,8 +43,7 @@
 		<license.copyrightOwners>Lunifera GmbH, Loetz KG</license.copyrightOwners>
 		<lunifera.gitrepo.name>lunifera-ide</lunifera.gitrepo.name>
 		<lunifera.releng.version>0.12.3</lunifera.releng.version>
-		<vaadin-version>7.3.7</vaadin-version>
-		<vaadin-mobile-version>4.0.0.beta2</vaadin-mobile-version>
+		<xtext.version>2.7.3</xtext.version>
 	</properties>
 
 	<modules>
@@ -91,34 +90,73 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.eclipse.xtend</groupId>
+					<artifactId>xtend-maven-plugin</artifactId>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>add-source</id>
+							<phase>initialize</phase>
+							<goals>
+								<goal>add-source</goal>
+							</goals>
+							<configuration>
+								<sources>
+									<source>src-gen</source>
+									<source>xtend-gen</source>
+								</sources>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
 					<groupId>org.eclipse.tycho</groupId>
-					<artifactId>target-platform-configuration</artifactId>
+					<artifactId>tycho-source-plugin</artifactId>
 					<version>${tycho-version}</version>
+					<executions>
+						<execution>
+							<id>plugin-source</id>
+							<goals>
+								<goal>plugin-source</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.eclipse.xtend</groupId>
+					<artifactId>xtend-maven-plugin</artifactId>
+					<version>${xtext.version}</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>compile</goal>
+								<goal>xtend-install-debug-info</goal>
+								<goal>testCompile</goal>
+								<goal>xtend-test-install-debug-info</goal>
+							</goals>
+						</execution>
+					</executions>
 					<configuration>
-						<resolver>p2</resolver>
-						<pomDependencies>consider</pomDependencies>
-						<environments>
-							<environment>
-								<os>win32</os>
-								<ws>win32</ws>
-								<arch>x86_64</arch>
-							</environment>
-							<environment>
-								<os>linux</os>
-								<ws>gtk</ws>
-								<arch>x86</arch>
-							</environment>
-							<environment>
-								<os>linux</os>
-								<ws>gtk</ws>
-								<arch>x86_64</arch>
-							</environment>
-							<environment>
-								<os>macosx</os>
-								<ws>cocoa</ws>
-								<arch>x86_64</arch>
-							</environment>
-						</environments>
+						<outputDirectory>xtend-gen</outputDirectory>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.lunifera.tools.maven</groupId>
+					<artifactId>org.lunifera.tools.maven.entity</artifactId>
+					<version>${project.version}</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>compile</goal>
+								<goal>testCompile</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<outputDirectory>src-gen</outputDirectory>
 					</configuration>
 				</plugin>
 			</plugins>
