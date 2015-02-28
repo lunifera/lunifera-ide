@@ -18,11 +18,6 @@
 	</parent>
 	<artifactId>org.lunifera.ide.tools.p2.mirror</artifactId>
 	<packaging>eclipse-plugin</packaging>
-
-	<dependencies>
-		
-	</dependencies>
-
 	
 	<name>Lunifera p2 mirror tools</name>
 	<description>Developer tools for Lunifera (p2 mirror maker)</description>
