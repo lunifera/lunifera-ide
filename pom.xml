@@ -143,22 +143,6 @@
 						<outputDirectory>xtend-gen</outputDirectory>
 					</configuration>
 				</plugin>
-				<plugin>
-					<groupId>org.lunifera.tools.maven</groupId>
-					<artifactId>org.lunifera.tools.maven.entity</artifactId>
-					<version>${project.version}</version>
-					<executions>
-						<execution>
-							<goals>
-								<goal>compile</goal>
-								<goal>testCompile</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<outputDirectory>src-gen</outputDirectory>
-					</configuration>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
