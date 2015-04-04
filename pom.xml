@@ -15,15 +15,15 @@
 
 	<groupId>org.lunifera.ide</groupId>
 	<artifactId>org.lunifera.ide</artifactId>
-	<version>0.7.4</version>
+	<version>0.9.0</version>
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>org.lunifera.releng.maven</groupId>
 		<artifactId>lunifera-releng-maven-parent-tycho</artifactId>
-		<version>0.10.1-SNAPSHOT</version>
+		<version>0.12.5-SNAPSHOT</version>
 	</parent>
-	
+
 	<url>${lunifera.site.repository.url}</url>
 	<scm>
 		<url>${lunifera.scm.url}</url>
@@ -43,7 +43,7 @@
 		<license.copyrightOwners>Lunifera GmbH, Loetz KG</license.copyrightOwners>
 		<lunifera.gitrepo.name>lunifera-ide</lunifera.gitrepo.name>
 		<lunifera.releng.version>0.12.3</lunifera.releng.version>
-		<vaadin-version>7.2.5</vaadin-version>
+		<vaadin-version>7.3.7</vaadin-version>
 		<vaadin-mobile-version>4.0.0.beta2</vaadin-mobile-version>
 	</properties>
 
@@ -52,9 +52,13 @@
 		<module>org.lunifera.ide.core.api</module>
 		<module>org.lunifera.ide.core.ui</module>
 		<module>org.lunifera.ide.core.ui.shared</module>
+		<module>org.lunifera.ide.tools.developer</module>
+		<module>org.lunifera.ide.tools.p2.mirror</module>
+		<module>org.lunifera.ide.tools.p2.mirror.product</module>
 		<module>org.lunifera.ide.p2</module>
 		<module>org.lunifera.ide.feature.ui</module>
 		<module>org.lunifera.ide.feature.headless</module>
+		<module>org.lunifera.ide.feature.tools</module>
 	</modules>
 
 	<profiles>
@@ -69,8 +73,20 @@
 				<module>org.lunifera.ide.p2</module>
 			</modules>
 		</profile>
+		<profile>
+			<id>build.product</id>
+			<activation>
+				<property>
+					<name>lunifera.build.product</name>
+				</property>
+			</activation>
+			<modules>
+				<module>org.lunifera.ide.tools.p2.mirror</module>
+				<module>org.lunifera.ide.tools.p2.mirror.product</module>
+			</modules>
+		</profile>
 	</profiles>
-	
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -107,5 +123,35 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>xtend-gen</directory>
+							<includes>
+								<include>**</include>
+							</includes>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.xtend</groupId>
+				<artifactId>xtend-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<goal>testCompile</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>xtend-gen</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 </project>

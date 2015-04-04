@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.lunifera.ide.tools.developer.updateDepVersion"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.lunifera.ide.tools.developer.UpdateDependencyVersions"
+               id="org.lunifera.ide.tools.developer.UpdateDepVersion"
+               label="Update dependency versions"
+               menubarPath="org.eclipse.ui.projectConfigure/additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="true"
+            id="org.lunifera.ide.tools.developer.updateArtifactVersion"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.lunifera.ide.tools.developer.UpdateArtifactVersions"
+               id="org.lunifera.ide.tools.developer.UpdateArtifactVersion"
+               label="Update artifact versions"
+               menubarPath="org.eclipse.ui.projectConfigure/additions">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

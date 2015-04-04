@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="app"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="*"
+            thread="any"
+            visible="true">
+         <run
+               class="org.lunifera.ide.tools.p2.mirror.P2MirrorApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         id="org.lunifera.ide.tools.p2.mirror.product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="org.lunifera.ide.tools.p2.mirror.app"
+            name="mirrorProduct">
+      </product>
+   </extension>
+
+</plugin>
