@@ -593,21 +593,23 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 						lDto.getFeatures().add(lNewAtt);
 					} else if (lBeanFeature instanceof LBeanReference) {
 						// Mapped dto
-						LDto mapToDto = getMapToDto((LEntityReference) lBeanFeature);
-						if (mapToDto == null) {
-							LOGGER.error("No Mapping-DTO could be found for "
-									+ lBeanFeature.getBean());
-							continue;
-						}
+						if (lBeanFeature instanceof LEntityReference) {
+							LDto mapToDto = getMapToDto((LEntityReference) lBeanFeature);
+							if (mapToDto == null) {
+								LOGGER.error("No Mapping-DTO could be found for "
+										+ lBeanFeature.getBean());
+								continue;
+							}
 
-						LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
-								.createLDtoInheritedReference();
-						lNewRef.setInheritedFeature((LReference) lBeanFeature);
-						LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-								.createLDtoFeature();
-						lNewRef.setAnnotationInfo(lAnnTarget);
-						lDto.getFeatures().add(lNewRef);
-						lNewRef.setType(mapToDto);
+							LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+									.createLDtoInheritedReference();
+							lNewRef.setInheritedFeature((LReference) lBeanFeature);
+							LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+									.createLDtoFeature();
+							lNewRef.setAnnotationInfo(lAnnTarget);
+							lDto.getFeatures().add(lNewRef);
+							lNewRef.setType(mapToDto);
+						}
 					}
 				}
 			}
