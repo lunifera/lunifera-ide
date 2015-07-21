@@ -43,8 +43,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.xtext.naming.QualifiedName;
-import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.resource.IReferenceDescription;
 import org.eclipse.xtext.resource.IResourceDescriptions;
 import org.eclipse.xtext.resource.SaveOptions;
@@ -56,7 +54,6 @@ import org.eclipse.xtext.ui.resource.XtextLiveScopeResourceSetProvider;
 import org.eclipse.xtext.util.IAcceptor;
 import org.eclipse.xtext.util.Pair;
 import org.lunifera.dsl.semantic.common.types.LAttribute;
-import org.lunifera.dsl.semantic.common.types.LPackage;
 import org.lunifera.dsl.semantic.common.types.LReference;
 import org.lunifera.dsl.semantic.common.types.LType;
 import org.lunifera.dsl.semantic.common.types.LTypedPackage;
@@ -78,6 +75,7 @@ import org.lunifera.dsl.semantic.entity.LEntityFeature;
 import org.lunifera.dsl.semantic.entity.LEntityModel;
 import org.lunifera.dsl.semantic.entity.LEntityReference;
 import org.lunifera.dsl.xtext.lazyresolver.api.ISemanticLoadingResource;
+import org.lunifera.dsl.xtext.lazyresolver.api.logger.TimeLogger;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.api.i18n.II18nRegistry;
 import org.lunifera.ide.core.ui.CoreUiActivator;
@@ -458,6 +456,8 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			return;
 		}
 
+		TimeLogger timeLogger = TimeLogger.start(getClass());
+
 		// find referencing dto model
 		Set<URI> entityURIs = findEntityURIs(tempLEntityModel);
 		final List<IReferenceDescription> targetDtoReferences = findTargetDtoReferences(entityURIs);
@@ -501,6 +501,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				if (lDto == null) {
 					lDto = LunDtoFactory.eINSTANCE.createLAutoInheritDto();
 					lDto.setAnnotationInfo(LunDtoFactory.eINSTANCE.createLDto());
+					dtos.add(lDto);
 				} else {
 					// remove from package for a while
 					LTypedPackage lPkg = (LTypedPackage) lDto.eContainer();
@@ -509,12 +510,24 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				lDto.setName(getDtoName(lEntity));
 				lDto.setWrappedType(lEntity);
 
-				fixFeatures(lDto);
-
 				dtosToPersist.add(lDto);
 
 			} else if (lType instanceof LBean) {
+				LBean lBean = (LBean) lType;
+				LDto lDto = findDto(lBean, dtos);
+				if (lDto == null) {
+					lDto = LunDtoFactory.eINSTANCE.createLAutoInheritDto();
+					lDto.setAnnotationInfo(LunDtoFactory.eINSTANCE.createLDto());
+					dtos.add(lDto);
+				} else {
+					// remove from package for a while
+					LTypedPackage lPkg = (LTypedPackage) lDto.eContainer();
+					lPkg.getTypes().remove(lDto);
+				}
+				lDto.setName(getDtoName(lBean));
+				lDto.setWrappedType(lBean);
 
+				dtosToPersist.add(lDto);
 			}
 		}
 
@@ -541,8 +554,22 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 					lDto.setSuperType(lDtoSuperType);
 				}
 			} else if (lType instanceof LBean) {
-
+				LBean lBean = (LBean) lType;
+				if (lBean.getSuperType() != null
+						&& !lBean.getSuperType().eIsProxy()) {
+					LBean lBeanSuperType = lBean.getSuperType();
+					LDto lDto = findDto(lBean, dtos);
+					LDto lDtoSuperType = findDto(lBeanSuperType, dtos);
+					lDto.setSuperType(lDtoSuperType);
+				}
 			}
+		}
+
+		// fix features
+		//
+		for (LType lType : dtosToPersist) {
+			LDto lDto = (LDto) lType;
+			fixFeatures(lDto, dtosToPersist);
 		}
 
 		// add the dtos to the package in the proper order
@@ -581,9 +608,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		} catch (IOException e) {
 			LOGGER.error("{}", e);
 		}
+
+		timeLogger.stop(LOGGER, "Finished LuniferaBuilder#buildDtos in ");
 	}
 
-	private LDto findDto(LEntity lEntity, List<LType> dtos) {
+	private LDto findDto(LType lEntity, List<LType> dtos) {
 		for (LType lType : dtos) {
 			if (lType instanceof LDto) {
 				LDto lDto = (LDto) lType;
@@ -633,18 +662,20 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	 * Removes all inherited features and adds them again.
 	 * 
 	 * @param lDto
+	 * @param dtos
 	 */
-	protected void fixFeatures(LDto lDto) {
+	protected void fixFeatures(LDto lDto, List<LType> dtos) {
 		removeAllInheritedFeatures(lDto);
-		addInheritedFeaturesFromEntity(lDto);
+		addInheritedFeaturesFromEntity(lDto, dtos);
 	}
 
 	/**
 	 * Adds all inherited features from the entity or bean.
 	 * 
 	 * @param lDto
+	 * @param dtos
 	 */
-	protected void addInheritedFeaturesFromEntity(LDto lDto) {
+	protected void addInheritedFeaturesFromEntity(LDto lDto, List<LType> dtos) {
 		if (lDto.getWrappedType() instanceof LEntity) {
 			LEntity currentEntity = (LEntity) lDto.getWrappedType();
 			// now add all features from the entity as inherited
@@ -665,7 +696,8 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 					lDto.getFeatures().add(lNewAtt);
 				} else if (lEntityFeature instanceof LEntityReference) {
 					// Mapped dto
-					LDto mapToDto = getMapToDto((LEntityReference) lEntityFeature);
+					LDto mapToDto = getMapToDto(
+							(LEntityReference) lEntityFeature, dtos);
 					if (mapToDto == null) {
 						LOGGER.error("No Mapping-DTO could be found for "
 								+ lEntityFeature.getEntity());
@@ -700,25 +732,40 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 							.createLDtoFeature();
 					lNewAtt.setAnnotationInfo(lAnnTarget);
 					lDto.getFeatures().add(lNewAtt);
-				} else if (lBeanFeature instanceof LBeanReference) {
-					// Mapped dto
-					if (lBeanFeature instanceof LEntityReference) {
-						LDto mapToDto = getMapToDto((LEntityReference) lBeanFeature);
-						if (mapToDto == null) {
-							LOGGER.error("No Mapping-DTO could be found for "
-									+ lBeanFeature.getBean());
-							continue;
-						}
-
-						LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
-								.createLDtoInheritedReference();
-						lNewRef.setInheritedFeature((LReference) lBeanFeature);
-						LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
-								.createLDtoFeature();
-						lNewRef.setAnnotationInfo(lAnnTarget);
-						lDto.getFeatures().add(lNewRef);
-						lNewRef.setType(mapToDto);
+				} else if (lBeanFeature instanceof LEntityReference) {
+					LDto mapToDto = getMapToDto(
+							(LEntityReference) lBeanFeature, dtos);
+					if (mapToDto == null) {
+						LOGGER.error("No Mapping-DTO could be found for "
+								+ lBeanFeature.getBean());
+						continue;
 					}
+
+					LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+							.createLDtoInheritedReference();
+					lNewRef.setInheritedFeature((LReference) lBeanFeature);
+					LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+							.createLDtoFeature();
+					lNewRef.setAnnotationInfo(lAnnTarget);
+					lDto.getFeatures().add(lNewRef);
+					lNewRef.setType(mapToDto);
+				} else if (lBeanFeature instanceof LBeanReference) {
+					LDto mapToDto = getMapToDto((LBeanReference) lBeanFeature,
+							dtos);
+					if (mapToDto == null) {
+						LOGGER.error("No Mapping-DTO could be found for "
+								+ lBeanFeature.getBean());
+						continue;
+					}
+
+					LDtoInheritedReference lNewRef = LunDtoFactory.eINSTANCE
+							.createLDtoInheritedReference();
+					lNewRef.setInheritedFeature((LReference) lBeanFeature);
+					LDtoFeature lAnnTarget = LunDtoFactory.eINSTANCE
+							.createLDtoFeature();
+					lNewRef.setAnnotationInfo(lAnnTarget);
+					lDto.getFeatures().add(lNewRef);
+					lNewRef.setType(mapToDto);
 				}
 			}
 		}
@@ -864,35 +911,27 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		return targetDtoReferences;
 	}
 
-
 	/**
 	 * Returns the mapped DTO or <code>null</code>.
 	 * 
 	 * @param lEntityFeature
 	 * @return
 	 */
-	private LDto getMapToDto(LEntityReference lEntityFeature) {
+	private LDto getMapToDto(LEntityReference lEntityFeature, List<LType> dtos) {
 		LEntity entity = lEntityFeature.getType();
-		LPackage lPkg = (LPackage) entity.eContainer();
+		return findDto(entity, dtos);
+	}
 
-		String pkgName = lPkg.getName();
-		String dtoFQN = String.format("%s.dtos.%sDto", pkgName,
-				entity.getName());
-
-		QualifiedName name = QualifiedName.create(dtoFQN.split("\\."));
-
-		for (IEObjectDescription result : resourceDescriptions
-				.getExportedObjects(LunDtoPackage.Literals.LDTO, name, false)) {
-			return (LDto) result.getEObjectOrProxy();
-		}
-
-		for (IEObjectDescription result : resourceDescriptions
-				.getExportedObjects(LunDtoPackage.Literals.LAUTO_INHERIT_DTO,
-						name, false)) {
-			return (LDto) result.getEObjectOrProxy();
-		}
-
-		return null;
+	/**
+	 * Returns the mapped DTO or <code>null</code>.
+	 * 
+	 * @param lEntityFeature
+	 * @param dtos
+	 * @return
+	 */
+	private LDto getMapToDto(LBeanReference lEntityFeature, List<LType> dtos) {
+		LEntity entity = (LEntity) lEntityFeature.getType();
+		return findDto(entity, dtos);
 	}
 
 	@SuppressWarnings("unchecked")
