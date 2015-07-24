@@ -3,10 +3,19 @@
    <feature id="org.lunifera.ide.feature.ui">
       <category name="Lunifera IDE"/>
    </feature>
+   <feature id="org.lunifera.ide.feature.ui.source">
+      <category name="Lunifera IDE"/>
+   </feature>
    <feature id="org.lunifera.ide.feature.headless">
       <category name="Lunifera IDE"/>
    </feature>
+   <feature id="org.lunifera.ide.feature.headless.source">
+      <category name="Lunifera IDE"/>
+   </feature>
    <feature id="org.lunifera.ide.feature.tools">
+      <category name="Lunifera IDE"/>
+   </feature>
+   <feature id="org.lunifera.ide.feature.tools.source">
       <category name="Lunifera IDE"/>
    </feature>
    <category-def name="Lunifera IDE" label="Lunifera IDE"/>
