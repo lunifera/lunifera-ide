@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.xtext.builder.impl.XtextBuilder;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.ui.builder.LuniferaBuilder;
-import org.lunifera.ide.core.ui.builder.mwe2.Mwe2Builder;
 
 @SuppressWarnings("restriction")
 public class LuniferaNature implements IProjectNature {
@@ -41,12 +40,6 @@ public class LuniferaNature implements IProjectNature {
 		if (!contains(temp, LuniferaBuilder.BUILDER_ID)) {
 			ICommand command = desc.newCommand();
 			command.setBuilderName(LuniferaBuilder.BUILDER_ID);
-			temp.add(command);
-		}
-
-		if (!contains(temp, Mwe2Builder.BUILDER_ID)) {
-			ICommand command = desc.newCommand();
-			command.setBuilderName(Mwe2Builder.BUILDER_ID);
 			temp.add(command);
 		}
 
@@ -93,7 +86,6 @@ public class LuniferaNature implements IProjectNature {
 		List<ICommand> temp = new ArrayList<ICommand>(Arrays.asList(commands));
 		
 		remove(temp, LuniferaBuilder.BUILDER_ID);
-		remove(temp, Mwe2Builder.BUILDER_ID);
 		
 		description.setBuildSpec(temp.toArray(new ICommand[temp.size()]));
 		project.setDescription(description, null);

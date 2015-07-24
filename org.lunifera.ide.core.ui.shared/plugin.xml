@@ -11,9 +11,6 @@
          <builder
            id="org.lunifera.ide.core.ui.shared.LuniferaBuilder">
      	</builder>
-         <builder
-           id="org.lunifera.ide.core.ui.shared.Mwe2Builder">
-         </builder>
    </extension>
    <extension
         id="LuniferaBuilder"
@@ -24,17 +21,6 @@
         <run
               class="org.lunifera.ide.core.ui.shared.internal.ExecutableExtensionFactory">
         	<parameter name="guicekey" value="org.lunifera.ide.core.ui.builder.LuniferaBuilder"/>
-        </run>
-     </builder>
-  </extension>
-     <extension
-        id="Mwe2Builder"
-        name="Lunifera Mwe2 Patch Builder"
-        point="org.eclipse.core.resources.builders">
-     	<builder
-           hasNature="true">
-        <run
-              class="org.lunifera.ide.core.ui.builder.mwe2.Mwe2Builder">
         </run>
      </builder>
   </extension>

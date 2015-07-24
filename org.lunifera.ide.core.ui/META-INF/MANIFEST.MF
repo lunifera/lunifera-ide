@@ -36,7 +36,6 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="3.9.0",
  org.eclipse.equinox.p2.metadata
 Export-Package: org.lunifera.ide.core.ui;x-internal:=true,
  org.lunifera.ide.core.ui.builder;x-internal:=true,
- org.lunifera.ide.core.ui.builder.mwe2;x-internal:=true,
  org.lunifera.ide.core.ui.i18n;x-internal:=true,
  org.lunifera.ide.core.ui.nature;x-internal:=true,
  org.lunifera.ide.core.ui.project;x-internal:=true,
