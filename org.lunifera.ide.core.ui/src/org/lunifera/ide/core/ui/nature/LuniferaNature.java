@@ -10,14 +10,23 @@
  */
 package org.lunifera.ide.core.ui.nature;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.xtext.builder.impl.XtextBuilder;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
 import org.lunifera.ide.core.ui.builder.LuniferaBuilder;
+import org.lunifera.ide.core.ui.builder.mwe2.Mwe2Builder;
 
+@SuppressWarnings("restriction")
 public class LuniferaNature implements IProjectNature {
 
 	public static String NATURE_ID = CoreUtil.NATURE_ID;
@@ -28,35 +37,66 @@ public class LuniferaNature implements IProjectNature {
 		IProjectDescription desc = project.getDescription();
 		ICommand[] commands = desc.getBuildSpec();
 
-		for (int i = 0; i < commands.length; ++i) {
-			if (commands[i].getBuilderName().equals(LuniferaBuilder.BUILDER_ID)) {
+		List<ICommand> temp = new ArrayList<ICommand>(Arrays.asList(commands));
+		if (!contains(temp, LuniferaBuilder.BUILDER_ID)) {
+			ICommand command = desc.newCommand();
+			command.setBuilderName(LuniferaBuilder.BUILDER_ID);
+			temp.add(command);
+		}
+
+		if (!contains(temp, Mwe2Builder.BUILDER_ID)) {
+			ICommand command = desc.newCommand();
+			command.setBuilderName(Mwe2Builder.BUILDER_ID);
+			temp.add(command);
+		}
+
+		temp.sort(new Comparator<ICommand>() {
+			@Override
+			public int compare(ICommand o1, ICommand o2) {
+				// xtext builder must go first
+				if (o1.getBuilderName().equals(XtextBuilder.BUILDER_ID)) {
+					return -1;
+				}
+				if (o1.getBuilderName().equals(LuniferaBuilder.BUILDER_ID)) {
+					return +1;
+				}
+				return 0;
+			}
+		});
+
+		desc.setBuildSpec(temp.toArray(new ICommand[temp.size()]));
+		project.setDescription(desc, null);
+	}
+
+	private boolean contains(List<ICommand> temp, String builderId) {
+		for (ICommand cmd : temp) {
+			if (cmd.getBuilderName().equals(builderId)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private void remove(List<ICommand> temp, String builderId) {
+		for (Iterator<ICommand> iterator = temp.iterator(); iterator.hasNext();) {
+			ICommand iCommand = iterator.next();
+			if (iCommand.getBuilderName().equals(builderId)) {
+				iterator.remove();
 				return;
 			}
 		}
-
-		ICommand[] newCommands = new ICommand[commands.length + 1];
-		System.arraycopy(commands, 0, newCommands, 1, commands.length);
-		ICommand command = desc.newCommand();
-		command.setBuilderName(LuniferaBuilder.BUILDER_ID);
-		newCommands[0] = command;
-		desc.setBuildSpec(newCommands);
-		project.setDescription(desc, null);
 	}
 
 	public void deconfigure() throws CoreException {
 		IProjectDescription description = getProject().getDescription();
 		ICommand[] commands = description.getBuildSpec();
-		for (int i = 0; i < commands.length; ++i) {
-			if (commands[i].getBuilderName().equals(LuniferaBuilder.BUILDER_ID)) {
-				ICommand[] newCommands = new ICommand[commands.length - 1];
-				System.arraycopy(commands, 0, newCommands, 0, i);
-				System.arraycopy(commands, i + 1, newCommands, i,
-						commands.length - i - 1);
-				description.setBuildSpec(newCommands);
-				project.setDescription(description, null);
-				return;
-			}
-		}
+		List<ICommand> temp = new ArrayList<ICommand>(Arrays.asList(commands));
+		
+		remove(temp, LuniferaBuilder.BUILDER_ID);
+		remove(temp, Mwe2Builder.BUILDER_ID);
+		
+		description.setBuildSpec(temp.toArray(new ICommand[temp.size()]));
+		project.setDescription(description, null);
 	}
 
 	public IProject getProject() {
