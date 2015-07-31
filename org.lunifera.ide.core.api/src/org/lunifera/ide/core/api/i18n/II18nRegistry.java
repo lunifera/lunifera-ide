@@ -354,6 +354,7 @@ public interface II18nRegistry {
 		private final String i18nKey;
 		private final String i18nValue;
 		private final ResourceDescription resourceDescription;
+		@SuppressWarnings("unused")
 		private final int priority;
 
 		public Proposal(String i18nKey, String i18nValue,
