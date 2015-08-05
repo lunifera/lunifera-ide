@@ -201,7 +201,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		incrementalBuildI18n(delta, progress);
 
 		monitor.subTask("Building Dtos");
-		incrementalBuildDtos(delta, progress);
+		incrementalBuildDtosAndServices(delta, progress);
 
 		if (progress.isCanceled())
 			throw new OperationCanceledException();
@@ -294,7 +294,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	 * @param progress
 	 * @throws CoreException
 	 */
-	protected void incrementalBuildDtos(IResourceDelta delta,
+	protected void incrementalBuildDtosAndServices(IResourceDelta delta,
 			final SubMonitor progress) throws CoreException {
 		delta.accept(new IResourceDeltaVisitor() {
 			@Override
@@ -348,7 +348,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		fullBuildI18n(project);
 
 		monitor.subTask("Building Dtos");
-		fullBuildDtos(project);
+		fullBuildDtosAndServices(project);
 		monitor.worked(6);
 	}
 
@@ -424,16 +424,14 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	}
 
 	/**
-	 * Builds I18n stuff.
+	 * Builds service stuff.
 	 * 
 	 * @param project
 	 * @return
 	 * @throws CoreException
 	 */
-	protected II18nRegistry.ProjectDescription fullBuildDtos(
-			final IProject project) throws CoreException {
-		final II18nRegistry.ProjectDescription projectDescription = new II18nRegistry.ProjectDescription(
-				getProject());
+	protected void fullBuildDtosAndServices(final IProject project)
+			throws CoreException {
 		project.accept(new IResourceVisitor() {
 			@Override
 			public boolean visit(IResource resource) throws CoreException {
@@ -447,6 +445,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 						if (lEntityModel != null) {
 							buildDtos(lEntityModel);
 						}
+					} else if (file.getFileExtension().equals("dtos")) {
+						LDtoModel lDtoModel = loadSemanticModel(file);
+						if (lDtoModel != null) {
+							buildServices(lDtoModel);
+						}
 					}
 				} else if (resource instanceof IFolder) {
 					String name = resource.getName();
@@ -456,7 +459,6 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				return false;
 			}
 		});
-		return projectDescription;
 	}
 
 	private void buildDtos(LEntityModel tempLEntityModel) {
