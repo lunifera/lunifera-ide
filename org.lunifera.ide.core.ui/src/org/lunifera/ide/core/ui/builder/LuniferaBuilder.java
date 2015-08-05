@@ -848,7 +848,14 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	}
 
 	protected String getDtoPackageName(LTypedPackage lTypePkg) {
-		return lTypePkg.getName().replace(".entities", ".dtos");
+		if(lTypePkg == null) {
+			return "notDefined";
+		}
+		if (lTypePkg.getName().contains("entities")) {
+			return lTypePkg.getName().replace("entities", "dtos");
+		} else {
+			return lTypePkg.getName() + ".dtos";
+		}
 	}
 
 	protected String getServicePackageName(LTypedPackage lTypePkg) {
