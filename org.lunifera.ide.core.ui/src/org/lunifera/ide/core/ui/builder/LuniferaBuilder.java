@@ -58,6 +58,7 @@ import org.lunifera.dsl.semantic.common.types.LReference;
 import org.lunifera.dsl.semantic.common.types.LType;
 import org.lunifera.dsl.semantic.common.types.LTypedPackage;
 import org.lunifera.dsl.semantic.common.types.LunTypesFactory;
+import org.lunifera.dsl.semantic.dto.LAutoInheritDto;
 import org.lunifera.dsl.semantic.dto.LDto;
 import org.lunifera.dsl.semantic.dto.LDtoFeature;
 import org.lunifera.dsl.semantic.dto.LDtoInheritedAttribute;
@@ -74,6 +75,11 @@ import org.lunifera.dsl.semantic.entity.LEntityAttribute;
 import org.lunifera.dsl.semantic.entity.LEntityFeature;
 import org.lunifera.dsl.semantic.entity.LEntityModel;
 import org.lunifera.dsl.semantic.entity.LEntityReference;
+import org.lunifera.dsl.semantic.service.LDTOService;
+import org.lunifera.dsl.semantic.service.LService;
+import org.lunifera.dsl.semantic.service.LServiceModel;
+import org.lunifera.dsl.semantic.service.LunServiceFactory;
+import org.lunifera.dsl.semantic.service.LunServicePackage;
 import org.lunifera.dsl.xtext.lazyresolver.api.ISemanticLoadingResource;
 import org.lunifera.dsl.xtext.lazyresolver.api.logger.TimeLogger;
 import org.lunifera.ide.core.api.i18n.CoreUtil;
@@ -305,6 +311,11 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 						if (lEntityModel != null) {
 							buildDtos(lEntityModel);
 						}
+					} else if (file.getFileExtension().equals("dtos")) {
+						LDtoModel lDtoModel = loadSemanticModel(file);
+						if (lDtoModel != null) {
+							buildServices(lDtoModel);
+						}
 					}
 				} else if (delta.getResource() instanceof IFolder) {
 					String name = delta.getResource().getName();
@@ -476,7 +487,7 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				firstDesc.getSourceEObjectUri(), true);
 
 		// create the proper dto resourceSet to save the dto
-		ResourceSet writeableResourceSet = getDtosProjectResourceSet(EcoreUtil
+		ResourceSet writeableResourceSet = getProjectResourceSet(EcoreUtil
 				.getURI(tempDto));
 
 		// load the dtoResource based on the dto resourceSet
@@ -487,25 +498,28 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 
 		List<LType> entities = collectEntities((LEntityModel) entityResource
 				.getSemanticElement());
-		List<LType> dtos = collectDtos((LDtoModel) dtoResource
+		List<LType> tempDtos = collectDtos((LDtoModel) dtoResource
 				.getSemanticElement());
 
 		List<LType> dtosToPersist = new ArrayList<LType>();
 
 		// create all dtos -> no linking
 		//
+		Set<LTypedPackage> touchedPackages = new HashSet<LTypedPackage>();
 		for (LType lType : entities) {
 			if (lType instanceof LEntity) {
 				LEntity lEntity = (LEntity) lType;
-				LDto lDto = findDto(lEntity, dtos);
+				LDto lDto = findDto(lEntity, tempDtos);
 				if (lDto == null) {
 					lDto = LunDtoFactory.eINSTANCE.createLAutoInheritDto();
 					lDto.setAnnotationInfo(LunDtoFactory.eINSTANCE.createLDto());
-					dtos.add(lDto);
+					tempDtos.add(lDto);
 				} else {
 					// remove from package for a while
 					LTypedPackage lPkg = (LTypedPackage) lDto.eContainer();
 					lPkg.getTypes().remove(lDto);
+					// collect all touched packages -> They need cleanup later
+					touchedPackages.add(lPkg);
 				}
 				lDto.setName(getDtoName(lEntity));
 				lDto.setWrappedType(lEntity);
@@ -514,15 +528,18 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 
 			} else if (lType instanceof LBean) {
 				LBean lBean = (LBean) lType;
-				LDto lDto = findDto(lBean, dtos);
+				LDto lDto = findDto(lBean, tempDtos);
 				if (lDto == null) {
 					lDto = LunDtoFactory.eINSTANCE.createLAutoInheritDto();
 					lDto.setAnnotationInfo(LunDtoFactory.eINSTANCE.createLDto());
-					dtos.add(lDto);
+					tempDtos.add(lDto);
 				} else {
 					// remove from package for a while
 					LTypedPackage lPkg = (LTypedPackage) lDto.eContainer();
 					lPkg.getTypes().remove(lDto);
+
+					// collect all touched packages -> They need cleanup later
+					touchedPackages.add(lPkg);
 				}
 				lDto.setName(getDtoName(lBean));
 				lDto.setWrappedType(lBean);
@@ -531,13 +548,29 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 			}
 		}
 
+		// clean touched packages -> Also remove dtos that are not based on an
+		// entity anymore
+		for (LTypedPackage lPkg : touchedPackages) {
+			for (Iterator<LType> iterator = lPkg.getTypes().iterator(); iterator
+					.hasNext();) {
+				LType lType = (LType) iterator.next();
+				if (lType instanceof LAutoInheritDto) {
+					LDto lDto = (LDto) lType;
+					if (lDto.getWrappedType() == null
+							|| lDto.getWrappedType().eIsProxy()) {
+						iterator.remove();
+					}
+				}
+			}
+		}
+
 		// remove all dtos having no wrapped type anymore
 		//
-		for (LType lType : new ArrayList<>(dtos)) {
+		for (LType lType : new ArrayList<>(tempDtos)) {
 			LDto lDto = (LDto) lType;
 			if (lDto.getWrappedType() == null
 					|| lDto.getWrappedType().eIsProxy()) {
-				dtos.remove(lDto);
+				tempDtos.remove(lDto);
 			}
 		}
 
@@ -549,8 +582,8 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				if (lEntity.getSuperType() != null
 						&& !lEntity.getSuperType().eIsProxy()) {
 					LEntity lEntitySuperType = lEntity.getSuperType();
-					LDto lDto = findDto(lEntity, dtos);
-					LDto lDtoSuperType = findDto(lEntitySuperType, dtos);
+					LDto lDto = findDto(lEntity, tempDtos);
+					LDto lDtoSuperType = findDto(lEntitySuperType, tempDtos);
 					lDto.setSuperType(lDtoSuperType);
 				}
 			} else if (lType instanceof LBean) {
@@ -558,8 +591,8 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 				if (lBean.getSuperType() != null
 						&& !lBean.getSuperType().eIsProxy()) {
 					LBean lBeanSuperType = lBean.getSuperType();
-					LDto lDto = findDto(lBean, dtos);
-					LDto lDtoSuperType = findDto(lBeanSuperType, dtos);
+					LDto lDto = findDto(lBean, tempDtos);
+					LDto lDtoSuperType = findDto(lBeanSuperType, tempDtos);
 					lDto.setSuperType(lDtoSuperType);
 				}
 			}
@@ -612,6 +645,182 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		timeLogger.stop(LOGGER, "Finished LuniferaBuilder#buildDtos in ");
 	}
 
+	private void buildServices(LDtoModel tempLDtoModel) {
+		IXtextUtilService service = CoreUiActivator.getDefault()
+				.getUtilService();
+		if (service == null) {
+			LOGGER.error("Skipping dto build since IXtextUtilService is not available!");
+			return;
+		}
+
+		TimeLogger timeLogger = TimeLogger.start(getClass());
+
+		// find referencing dto model
+		Set<URI> dtoURIs = findDtoURIs(tempLDtoModel);
+		final List<IReferenceDescription> targetServiceReferences = findTargetServiceReferences(dtoURIs);
+		if (targetServiceReferences.isEmpty()) {
+			return;
+		}
+
+		// access dto resource
+		ISemanticLoadingResource tempDtoResource = (ISemanticLoadingResource) tempLDtoModel
+				.eResource();
+		ResourceSet readonlyResourceSet = tempDtoResource.getResourceSet();
+
+		// access service resource based on dtoResourceSet
+		IReferenceDescription firstDesc = targetServiceReferences.get(0);
+		LService tempService = (LService) readonlyResourceSet.getEObject(
+				firstDesc.getSourceEObjectUri(), true);
+
+		// create the proper dto resourceSet to save the dto
+		ResourceSet writeableResourceSet = getProjectResourceSet(EcoreUtil
+				.getURI(tempService));
+
+		// load the serviceResource based on the service resourceSet
+		ISemanticLoadingResource serviceResource = (ISemanticLoadingResource) writeableResourceSet
+				.getResource(EcoreUtil.getURI(tempService).trimFragment(), true);
+		ISemanticLoadingResource dtoResource = (ISemanticLoadingResource) writeableResourceSet
+				.getResource(tempLDtoModel.eResource().getURI(), true);
+
+		List<LType> dtos = collectDtos((LDtoModel) dtoResource
+				.getSemanticElement());
+		List<LType> tempServices = collectServices((LServiceModel) serviceResource
+				.getSemanticElement());
+
+		List<LType> servicesToPersist = new ArrayList<LType>();
+
+		// create all services -> no linking
+		//
+		Set<LTypedPackage> touchedPackages = new HashSet<LTypedPackage>();
+		for (LType lType : dtos) {
+			if (lType instanceof LDto) {
+				LDto lDto = (LDto) lType;
+				LDTOService lService = findService(lDto, tempServices);
+				if (lService == null) {
+					lService = LunServiceFactory.eINSTANCE.createLDTOService();
+					lService.setAnnotationInfo(LunServiceFactory.eINSTANCE
+							.createLDTOService());
+					lService.setInjectedServices(LunServiceFactory.eINSTANCE
+							.createLInjectedServices());
+					tempServices.add(lService);
+				} else {
+					// remove from package for a while
+					LTypedPackage lPkg = (LTypedPackage) lService.eContainer();
+					lPkg.getTypes().remove(lService);
+					// collect all touched packages -> They need cleanup later
+					touchedPackages.add(lPkg);
+				}
+				lService.setName(getServiceName(lDto));
+				lService.setDto(lDto);
+
+				servicesToPersist.add(lService);
+			}
+		}
+
+		// clean touched packages -> Also remove services that are not based on
+		// an
+		// dto anymore
+		for (LTypedPackage lPkg : touchedPackages) {
+			for (Iterator<LType> iterator = lPkg.getTypes().iterator(); iterator
+					.hasNext();) {
+				LType lType = (LType) iterator.next();
+				if (lType instanceof LDTOService) {
+					LDTOService lService = (LDTOService) lType;
+					if (lService.getDto() == null
+							|| lService.getDto().eIsProxy()) {
+						iterator.remove();
+					}
+				}
+			}
+		}
+
+		// remove all services having no wrapped type anymore
+		//
+		for (LType lType : new ArrayList<>(tempServices)) {
+			LDTOService lService = (LDTOService) lType;
+			if (lService.getDto() == null || lService.getDto().eIsProxy()) {
+				tempServices.remove(lService);
+			}
+		}
+
+		// link super types
+		//
+		for (LType lType : dtos) {
+			if (lType instanceof LEntity) {
+				LEntity lEntity = (LEntity) lType;
+				if (lEntity.getSuperType() != null
+						&& !lEntity.getSuperType().eIsProxy()) {
+					LEntity lEntitySuperType = lEntity.getSuperType();
+					LDto lDto = findDto(lEntity, tempServices);
+					LDto lDtoSuperType = findDto(lEntitySuperType, tempServices);
+					lDto.setSuperType(lDtoSuperType);
+				}
+			} else if (lType instanceof LBean) {
+				LBean lBean = (LBean) lType;
+				if (lBean.getSuperType() != null
+						&& !lBean.getSuperType().eIsProxy()) {
+					LBean lBeanSuperType = lBean.getSuperType();
+					LDto lDto = findDto(lBean, tempServices);
+					LDto lDtoSuperType = findDto(lBeanSuperType, tempServices);
+					lDto.setSuperType(lDtoSuperType);
+				}
+			}
+		}
+
+		// fix features
+		//
+		for (LType lType : servicesToPersist) {
+			LDTOService lService = (LDTOService) lType;
+			LDto lDto = lService.getDto();
+			// can never be a bean!
+			LEntity lEntity = (LEntity) lDto.getWrappedType();
+			String pu = lEntity.getPersistenceUnit();
+			if (pu != null && !pu.equals("")) {
+				lService.setMutablePersistenceId(true);
+				lService.setPersistenceId(pu);
+			}
+		}
+
+		// add the services to the package in the proper order
+		//
+		Set<String> serviceNames = new HashSet<String>();
+		for (LType lType : servicesToPersist) {
+			LDTOService lService = (LDTOService) lType;
+
+			// filter dtos
+			if (serviceNames.contains(lService.getName())) {
+				// remove duplicate dtos
+				continue;
+			} else if (lService.getDto().eIsProxy()) {
+				// remove dto without a proper entity reference
+				continue;
+			}
+			serviceNames.add(lService.getName());
+
+			LTypedPackage lDtoPkg = (LTypedPackage) lService.getDto()
+					.eContainer();
+			addServicesToPackage(getServicePackageName(lDtoPkg), lService,
+					(LServiceModel) serviceResource.getSemanticElement());
+		}
+
+		try {
+			Diagnostic diagnostic = Diagnostician.INSTANCE
+					.validate(serviceResource.getSemanticElement());
+			int sev = diagnostic.getSeverity();
+			if (sev <= Diagnostic.WARNING) {
+				serviceResource.save(SaveOptions.newBuilder().format()
+						.getOptions().toOptionsMap());
+			} else {
+				LOGGER.error(serviceResource.getErrors().get(0).toString());
+			}
+			serviceResource.unload();
+		} catch (IOException e) {
+			LOGGER.error("{}", e);
+		}
+
+		timeLogger.stop(LOGGER, "Finished LuniferaBuilder#buildDtos in ");
+	}
+
 	private LDto findDto(LType lEntity, List<LType> dtos) {
 		for (LType lType : dtos) {
 			if (lType instanceof LDto) {
@@ -624,8 +833,24 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		return null;
 	}
 
+	private LDTOService findService(LType lDto, List<LType> services) {
+		for (LType lType : services) {
+			if (lType instanceof LDTOService) {
+				LDTOService lService = (LDTOService) lType;
+				if (lService.getDto() == lDto) {
+					return lService;
+				}
+			}
+		}
+		return null;
+	}
+
 	protected String getDtoPackageName(LTypedPackage lTypePkg) {
 		return lTypePkg.getName().replace(".entities", ".dtos");
+	}
+
+	protected String getServicePackageName(LTypedPackage lTypePkg) {
+		return lTypePkg.getName() + ".services";
 	}
 
 	/**
@@ -654,8 +879,37 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		pkg.getTypes().add(newDto);
 	}
 
+	/**
+	 * Adds the service to the package maching the packageName
+	 * 
+	 * @param packageName
+	 * @param newService
+	 * @param lModel
+	 */
+	private void addServicesToPackage(String packageName, LService newService,
+			LServiceModel lModel) {
+
+		Optional<LTypedPackage> optPkg = lModel.getPackages().stream()
+				.filter(p -> p.getName().equals(packageName)).findFirst();
+		LTypedPackage pkg = null;
+		if (optPkg.isPresent()) {
+			pkg = optPkg.get();
+		}
+		if (pkg == null) {
+			pkg = LunTypesFactory.eINSTANCE.createLTypedPackage();
+			pkg.setName(packageName);
+			lModel.getPackages().add(pkg);
+		}
+
+		pkg.getTypes().add(newService);
+	}
+
 	protected String getDtoName(LType lType) {
 		return lType.getName() + "Dto";
+	}
+
+	protected String getServiceName(LType lType) {
+		return lType.getName() + "Service";
 	}
 
 	/**
@@ -839,16 +1093,16 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		return resourceSet;
 	}
 
-	protected XtextResourceSet getDtosProjectResourceSet(URI dtoURI) {
+	protected XtextResourceSet getProjectResourceSet(URI uri) {
 		IProject dtoProject = null;
 		Iterable<Pair<IStorage, IProject>> pairs = uriStorageMapper
-				.getStorages(dtoURI);
+				.getStorages(uri);
 		if (pairs.iterator().hasNext()) {
 			dtoProject = pairs.iterator().next().getSecond();
 		}
 
 		if (dtoProject == null) {
-			LOGGER.error("No project could be found for " + dtoURI);
+			LOGGER.error("No project could be found for " + uri);
 			return null;
 		}
 
@@ -871,6 +1125,18 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 		return entityURIs;
 	}
 
+	protected Set<URI> findDtoURIs(LDtoModel lDtoModel) {
+		Set<URI> dtoURIs = new HashSet<URI>();
+		for (LTypedPackage lPkg : lDtoModel.getPackages()) {
+			for (LType lType : lPkg.getTypes()) {
+				if (lType instanceof LDto) {
+					dtoURIs.add(EcoreUtil.getURI(lType));
+				}
+			}
+		}
+		return dtoURIs;
+	}
+
 	protected List<LType> collectEntities(LEntityModel lEntityModel) {
 		List<LType> entities = new ArrayList<LType>();
 		for (LTypedPackage lPkg : lEntityModel.getPackages()) {
@@ -884,15 +1150,30 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	}
 
 	protected List<LType> collectDtos(LDtoModel lDtoModel) {
-		List<LType> entities = new ArrayList<LType>();
+		List<LType> dtos = new ArrayList<LType>();
 		for (LTypedPackage lPkg : lDtoModel.getPackages()) {
 			for (LType lType : lPkg.getTypes()) {
 				if (lType instanceof LDto) {
-					entities.add(lType);
+					LDto lDto = (LDto) lType;
+					if (lDto.getWrappedType() != null) {
+						dtos.add(lType);
+					}
 				}
 			}
 		}
-		return entities;
+		return dtos;
+	}
+
+	protected List<LType> collectServices(LServiceModel lServiceModel) {
+		List<LType> services = new ArrayList<LType>();
+		for (LTypedPackage lPkg : lServiceModel.getPackages()) {
+			for (LType lType : lPkg.getTypes()) {
+				if (lType instanceof LService) {
+					services.add(lType);
+				}
+			}
+		}
+		return services;
 	}
 
 	@SuppressWarnings("restriction")
@@ -909,6 +1190,22 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 					}
 				}, null);
 		return targetDtoReferences;
+	}
+
+	@SuppressWarnings("restriction")
+	protected List<IReferenceDescription> findTargetServiceReferences(
+			Set<URI> dtoURIs) {
+		final List<IReferenceDescription> targetServiceReferences = new ArrayList<IReferenceDescription>();
+		referenceFinder.findAllReferences(dtoURIs, null,
+				new IAcceptor<IReferenceDescription>() {
+					@Override
+					public void accept(IReferenceDescription t) {
+						if (t.getEReference() == LunServicePackage.Literals.LDTO_SERVICE__DTO) {
+							targetServiceReferences.add(t);
+						}
+					}
+				}, null);
+		return targetServiceReferences;
 	}
 
 	/**
@@ -937,26 +1234,26 @@ public class LuniferaBuilder extends IncrementalProjectBuilder {
 	@SuppressWarnings("unchecked")
 	private <A extends EObject> A loadSemanticModel(IFile file) {
 		LOGGER.info("loading:" + file.getName());
-		org.eclipse.emf.common.util.URI entityDSLURI = org.eclipse.emf.common.util.URI
+		org.eclipse.emf.common.util.URI modelURI = org.eclipse.emf.common.util.URI
 				.createPlatformResourceURI(file.getFullPath().toString(), false);
 		XtextResourceSet rs = (XtextResourceSet) rsProvider.get(getProject());
-		Resource entityResource = rs.getResource(entityDSLURI, true);
+		Resource resource = rs.getResource(modelURI, true);
 		try {
-			entityResource.load(null);
+			resource.load(null);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
-		A entityModel = null;
-		if (entityResource instanceof ISemanticLoadingResource) {
-			entityModel = (A) ((ISemanticLoadingResource) entityResource)
+		A semanticModel = null;
+		if (resource instanceof ISemanticLoadingResource) {
+			semanticModel = (A) ((ISemanticLoadingResource) resource)
 					.getSemanticElement();
 		} else {
-			entityModel = (A) entityResource.getContents().get(0);
+			semanticModel = (A) resource.getContents().get(0);
 		}
 
 		LOGGER.info("finished loading:" + file.getName());
-		return entityModel;
+		return semanticModel;
 	}
 
 	protected boolean isOpened(IResourceDelta delta) {
